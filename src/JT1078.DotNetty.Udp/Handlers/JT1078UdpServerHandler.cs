@@ -52,7 +52,7 @@ namespace JT1078.DotNetty.Udp.Handlers
                 JT1078Package package = JT1078Serializer.Deserialize(msg.Buffer);
                 AtomicCounterService.MsgSuccessIncrement();
                 SessionManager.TryAdd(ctx.Channel, msg.Sender, package.SIM);
-                handlers.Processor(package);
+                handlers.Processor(new JT1078Request(package, msg.Buffer));
                 if (logger.IsEnabled(LogLevel.Debug))
                 {
                     logger.LogDebug("accept package success count<<<" + AtomicCounterService.MsgSuccessCount.ToString());

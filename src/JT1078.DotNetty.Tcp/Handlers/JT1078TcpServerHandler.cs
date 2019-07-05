@@ -7,6 +7,7 @@ using JT1078.DotNetty.Core.Services;
 using JT1078.Protocol;
 using JT1078.DotNetty.Core.Interfaces;
 using JT1078.DotNetty.Core.Session;
+using JT1078.DotNetty.Core.Metadata;
 
 namespace JT1078.DotNetty.Tcp.Handlers
 {
@@ -53,7 +54,7 @@ namespace JT1078.DotNetty.Tcp.Handlers
                 JT1078Package package = JT1078Serializer.Deserialize(msg);
                 AtomicCounterService.MsgSuccessIncrement();
                 SessionManager.TryAdd(package.SIM, ctx.Channel);
-                handlers.Processor(package);
+                handlers.Processor(new JT1078Request(package, msg));
                 if (logger.IsEnabled(LogLevel.Debug))
                 {
                     logger.LogDebug("accept package success count<<<" + AtomicCounterService.MsgSuccessCount.ToString());

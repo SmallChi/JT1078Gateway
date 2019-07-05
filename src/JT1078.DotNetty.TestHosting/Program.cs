@@ -7,6 +7,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using NLog.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -18,6 +21,15 @@ namespace JT1078.DotNetty.TestHosting
 {
     class Program
     {
+        static Program()
+        {
+            Newtonsoft.Json.JsonSerializerSettings setting = new Newtonsoft.Json.JsonSerializerSettings();
+            JsonConvert.DefaultSettings = new Func<JsonSerializerSettings>(() =>
+            {
+                setting.Converters.Add(new StringEnumConverter());
+                return setting;
+            });
+        }
         static async Task Main(string[] args)
         {
             //3031636481E2108801123456781001100000016BB392CA7C02800028002E0000000161E1A2BF0098CFC0EE1E17283407788E39A403FDDBD1D546BFB063013F59AC34C97A021AB96A28A42C08
@@ -29,8 +41,16 @@ namespace JT1078.DotNetty.TestHosting
                 })
                 .ConfigureLogging((context, logging) =>
                 {
+                    if (Environment.OSVersion.Platform == PlatformID.Unix)
+                    {
+                        NLog.LogManager.LoadConfiguration("Configs/nlog.unix.config");
+                    }
+                    else
+                    {
+                        NLog.LogManager.LoadConfiguration("Configs/nlog.win.config");
+                    }
+                    logging.AddNLog(new NLogProviderOptions { CaptureMessageTemplates = true, CaptureMessageProperties = true });
                     logging.SetMinimumLevel(LogLevel.Trace);
-                    logging.AddConsole();
                 })
                 .ConfigureServices((hostContext, services) =>
                 {

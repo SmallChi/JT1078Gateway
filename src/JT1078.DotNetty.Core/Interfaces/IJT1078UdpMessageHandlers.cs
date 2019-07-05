@@ -1,10 +1,11 @@
-﻿using JT1078.Protocol;
+﻿using JT1078.DotNetty.Core.Metadata;
+using JT1078.Protocol;
 using System.Threading.Tasks;
 
 namespace JT1078.DotNetty.Core.Interfaces
 {
     public interface IJT1078UdpMessageHandlers
     {
-        Task Processor(JT1078Package package);
+        Task<JT1078Response> Processor(JT1078Request request);
     }
 }

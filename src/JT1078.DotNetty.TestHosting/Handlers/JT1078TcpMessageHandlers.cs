@@ -1,4 +1,6 @@
-﻿using JT1078.DotNetty.Core.Interfaces;
+﻿using DotNetty.Buffers;
+using JT1078.DotNetty.Core.Interfaces;
+using JT1078.DotNetty.Core.Metadata;
 using JT1078.Protocol;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -11,17 +13,19 @@ namespace JT1078.DotNetty.TestHosting.Handlers
 {
     public class JT1078TcpMessageHandlers : IJT1078TcpMessageHandlers
     {
-        private readonly ILogger<JT1078TcpMessageHandlers> logger;
-
+        private readonly ILogger logger;
+        private readonly ILogger hexLogger;
         public JT1078TcpMessageHandlers(ILoggerFactory loggerFactory)
         {
-            logger = loggerFactory.CreateLogger<JT1078TcpMessageHandlers>();
+            logger = loggerFactory.CreateLogger("JT1078TcpMessageHandlers");
+            hexLogger = loggerFactory.CreateLogger("JT1078TcpMessageHandlersHex");
         }
 
-        public Task Processor(JT1078Package package)
+        public Task<JT1078Response> Processor(JT1078Request request)
         {
-            logger.LogDebug(JsonConvert.SerializeObject(package));
-            return Task.CompletedTask;
+            logger.LogInformation(JsonConvert.SerializeObject(request.Package));
+            hexLogger.LogInformation(ByteBufferUtil.HexDump(request.Src));
+            return Task.FromResult<JT1078Response>(default);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using JT1078.DotNetty.Core.Interfaces;
+using JT1078.DotNetty.Core.Metadata;
 using JT1078.Protocol;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -15,10 +16,10 @@ namespace JT1078.DotNetty.TestHosting.Handlers
             logger = loggerFactory.CreateLogger<JT1078UdpMessageHandlers>();
         }
 
-        public Task Processor(JT1078Package package)
+        public Task<JT1078Response> Processor(JT1078Request request)
         {
-            logger.LogDebug(JsonConvert.SerializeObject(package));
-            return Task.CompletedTask;
+            logger.LogDebug(JsonConvert.SerializeObject(request.Package));
+            return Task.FromResult<JT1078Response>(default);
         }
     }
 }

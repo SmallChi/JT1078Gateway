@@ -1,7 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\SharedProperties.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>JT1078.DotNetty.Udp</PackageId>
+    <Product>JT1078.DotNetty.Udp</Product>
+    <Description>基于DotNetty实现的JT1078DotNetty的Udp服务</Description>
+    <PackageReleaseNotes>基于DotNetty实现的JT1078DotNetty的Udp服务</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

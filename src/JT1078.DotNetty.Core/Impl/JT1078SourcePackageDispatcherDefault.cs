@@ -28,6 +28,7 @@ namespace JT1078.DotNetty.Core.Impl
             this.optionsMonitor = optionsMonitor;
             timer = new System.Timers.Timer(10000);
             timer.Elapsed += new ElapsedEventHandler(timer_Elapsed);
+            timer.AutoReset = false;
             timer.Start();
             InitialDispatcherClient();
         }
@@ -47,6 +48,8 @@ namespace JT1078.DotNetty.Core.Impl
                     else
                     {
                         logger.LogError($"{item}链接已关闭");
+                        item.Value.Close();
+                        item.Value.Dispose();
                         channeldic.TryRemove(item.Key, out _);
                         reconnectionQueue.Enqueue(item.Key);
                     }
@@ -54,6 +57,8 @@ namespace JT1078.DotNetty.Core.Impl
                 catch (Exception ex)
                 {
                     logger.LogError($"{item}发送数据出现异常：{ex}");
+                    item.Value.Close();
+                    item.Value.Dispose();
                     reconnectionQueue.Enqueue(item.Key);
                     channeldic.TryRemove(item.Key, out _);
                 }
@@ -83,12 +88,25 @@ namespace JT1078.DotNetty.Core.Impl
         {
             timer.Stop();
             Thread.CurrentThread.IsBackground = true;
-            var ip = reconnectionQueue.Dequeue();
-            if (!string.IsNullOrEmpty(ip))
+            try
             {
-                AddRemoteServsers(new List<string>() { ip });
+                if (reconnectionQueue.Count > 0)
+                {
+                    var ip = reconnectionQueue.Dequeue();
+                    if (!string.IsNullOrEmpty(ip))
+                    {
+                        AddRemoteServsers(new List<string>() { ip });
+                    }
+                }
             }
-            timer.Start();
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "");
+            }
+            finally
+            {
+                timer.Start();
+            }
         }
 
         /// <summary>
@@ -140,7 +158,6 @@ namespace JT1078.DotNetty.Core.Impl
         /// <summary>
         /// 动态添加远程服务器
         /// </summary>
-        /// <param name="bootstrap"></param>
         /// <param name="lastRemoteServers"></param>
         private void AddRemoteServsers(List<string> lastRemoteServers)
         {
@@ -157,6 +174,7 @@ namespace JT1078.DotNetty.Core.Impl
                     }
                     else
                     {
+                        client.Dispose();
                         reconnectionQueue.Enqueue(item);
                     }
                 }

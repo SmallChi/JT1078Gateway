@@ -1,0 +1,19 @@
+﻿<Project>
+  <PropertyGroup>
+    <LangVersion>7.3</LangVersion>
+    <Copyright>Copyright 2019.</Copyright>
+    <Authors>SmallChi(Koike)</Authors>
+    <RepositoryUrl>https://github.com/SmallChi/JT1078DotNetty</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/SmallChi/JT1078DotNetty</PackageProjectUrl>
+    <licenseUrl>https://github.com/SmallChi/JT1078DotNetty/blob/master/LICENSE</licenseUrl>
+    <license>https://github.com/SmallChi/JT1078DotNetty/blob/master/LICENSE</license>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Version>1.0.0-preview1</Version>
+    <SignAssembly>false</SignAssembly>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+</Project>

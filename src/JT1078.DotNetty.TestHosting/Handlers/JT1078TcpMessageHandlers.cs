@@ -24,7 +24,7 @@ namespace JT1078.DotNetty.TestHosting.Handlers
         public Task<JT1078Response> Processor(JT1078Request request)
         {
             logger.LogInformation(JsonConvert.SerializeObject(request.Package));
-            hexLogger.LogInformation(ByteBufferUtil.HexDump(request.Src));
+            hexLogger.LogInformation($"{request.Package.SIM},{request.Package.SN},{request.Package.LogicChannelNumber},{request.Package.Label3.DataType.ToString()},{request.Package.Label3.SubpackageType.ToString()},{ByteBufferUtil.HexDump(request.Src)}");
             return Task.FromResult<JT1078Response>(default);
         }
     }

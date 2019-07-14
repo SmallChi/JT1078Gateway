@@ -2,6 +2,7 @@
 using JT1078.DotNetty.Tcp;
 using JT1078.DotNetty.TestHosting.Handlers;
 using JT1078.DotNetty.Udp;
+using JT1078.DotNetty.WebSocket;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -57,12 +58,15 @@ namespace JT1078.DotNetty.TestHosting
                     services.AddSingleton<ILoggerFactory, LoggerFactory>();
                     services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
                     services.AddJT1078Core(hostContext.Configuration)
-                            .AddJT1078TcpHost()
-                            .Replace<JT1078TcpMessageHandlers>()
-                            .Builder()
-                            .AddJT1078UdpHost()
-                            .Replace<JT1078UdpMessageHandlers>()
+                            //.AddJT1078TcpHost()
+                            //.Replace<JT1078TcpMessageHandlers>()
+                            //.Builder()
+                            //.AddJT1078UdpHost()
+                            //.Replace<JT1078UdpMessageHandlers>()
+                            //.Builder()
+                            .AddJT1078WebSocketHost()
                             .Builder();
+                    services.AddHostedService<JT1078WebSocketPushHostedService>();
                 });
 
             await serverHostBuilder.RunConsoleAsync();

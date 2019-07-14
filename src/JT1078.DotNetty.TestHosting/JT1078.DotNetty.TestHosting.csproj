@@ -17,9 +17,13 @@
   <ItemGroup>
     <ProjectReference Include="..\JT1078.DotNetty.Tcp\JT1078.DotNetty.Tcp.csproj" />
     <ProjectReference Include="..\JT1078.DotNetty.Udp\JT1078.DotNetty.Udp.csproj" />
+    <ProjectReference Include="..\JT1078.DotNetty.WebSocket\JT1078.DotNetty.WebSocket.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="2019-07-12.log">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

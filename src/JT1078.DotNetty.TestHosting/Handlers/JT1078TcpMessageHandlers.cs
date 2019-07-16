@@ -15,8 +15,12 @@ namespace JT1078.DotNetty.TestHosting.Handlers
     {
         private readonly ILogger logger;
         private readonly ILogger hexLogger;
-        public JT1078TcpMessageHandlers(ILoggerFactory loggerFactory)
+        private readonly JT1078DataService jT1078DataService;
+        public JT1078TcpMessageHandlers(
+            JT1078DataService jT1078DataService,
+            ILoggerFactory loggerFactory)
         {
+            this.jT1078DataService = jT1078DataService;
             logger = loggerFactory.CreateLogger("JT1078TcpMessageHandlers");
             hexLogger = loggerFactory.CreateLogger("JT1078TcpMessageHandlersHex");
         }
@@ -25,6 +29,7 @@ namespace JT1078.DotNetty.TestHosting.Handlers
         {
             logger.LogInformation(JsonConvert.SerializeObject(request.Package));
             hexLogger.LogInformation($"{request.Package.SIM},{request.Package.SN},{request.Package.LogicChannelNumber},{request.Package.Label3.DataType.ToString()},{request.Package.Label3.SubpackageType.ToString()},{ByteBufferUtil.HexDump(request.Src)}");
+            jT1078DataService.DataBlockingCollection.TryAdd(request.Package);
             return Task.FromResult<JT1078Response>(default);
         }
     }

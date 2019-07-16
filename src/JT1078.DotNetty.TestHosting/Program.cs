@@ -57,10 +57,11 @@ namespace JT1078.DotNetty.TestHosting
                 {
                     services.AddSingleton<ILoggerFactory, LoggerFactory>();
                     services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+                    services.AddSingleton<JT1078DataService>();
                     services.AddJT1078Core(hostContext.Configuration)
-                            //.AddJT1078TcpHost()
-                            //.Replace<JT1078TcpMessageHandlers>()
-                            //.Builder()
+                            .AddJT1078TcpHost()
+                            .Replace<JT1078TcpMessageHandlers>()
+                            .Builder()
                             //.AddJT1078UdpHost()
                             //.Replace<JT1078UdpMessageHandlers>()
                             //.Builder()

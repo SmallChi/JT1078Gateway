@@ -12,6 +12,7 @@ using static DotNetty.Codecs.Http.HttpResponseStatus;
 using Microsoft.Extensions.Logging;
 using JT1078.DotNetty.Core.Session;
 using System.Text.RegularExpressions;
+using JT1078.DotNetty.Core.Interfaces;
 
 namespace JT1078.DotNetty.WebSocket.Handlers
 {
@@ -24,12 +25,15 @@ namespace JT1078.DotNetty.WebSocket.Handlers
         private readonly ILogger<JT1078WebSocketServerHandler> logger;
 
         private readonly JT1078WebSocketSessionManager jT1078WebSocketSessionManager;
+        private readonly IJT1078Authorization iJT1078Authorization;
 
         public JT1078WebSocketServerHandler(
             JT1078WebSocketSessionManager jT1078WebSocketSessionManager,
+            IJT1078Authorization iJT1078Authorization,
             ILoggerFactory loggerFactory)
         {
             this.jT1078WebSocketSessionManager = jT1078WebSocketSessionManager;
+            this.iJT1078Authorization = iJT1078Authorization;
             logger = loggerFactory.CreateLogger<JT1078WebSocketServerHandler>();
         }
 
@@ -46,7 +50,7 @@ namespace JT1078.DotNetty.WebSocket.Handlers
         protected override void ChannelRead0(IChannelHandlerContext ctx, object msg)
         {
             if (msg is IFullHttpRequest request)
-            {
+            {             
                 this.HandleHttpRequest(ctx, request);
             }
             else if (msg is WebSocketFrame frame)
@@ -77,19 +81,24 @@ namespace JT1078.DotNetty.WebSocket.Handlers
                 SendHttpResponse(ctx, req, res);
                 return;
             }
-            // Handshake
-            var wsFactory = new WebSocketServerHandshakerFactory(GetWebSocketLocation(req), null, true, 5 * 1024 * 1024);
-            this.handshaker = wsFactory.NewHandshaker(req);
-            if (this.handshaker == null)
+            if (iJT1078Authorization.Authorization(req, out var principal))
             {
-                WebSocketServerHandshakerFactory.SendUnsupportedVersionResponse(ctx.Channel);
+                // Handshake
+                var wsFactory = new WebSocketServerHandshakerFactory(GetWebSocketLocation(req), null, true, 5 * 1024 * 1024);
+                this.handshaker = wsFactory.NewHandshaker(req);
+                if (this.handshaker == null)
+                {
+                    WebSocketServerHandshakerFactory.SendUnsupportedVersionResponse(ctx.Channel);
+                }
+                else
+                {
+                    this.handshaker.HandshakeAsync(ctx.Channel, req);
+                    jT1078WebSocketSessionManager.TryAdd(principal.Identity.Name, ctx.Channel);
+                }
             }
-            else
-            {
-                this.handshaker.HandshakeAsync(ctx.Channel, req);
-                var uriSpan = req.Uri.AsSpan();
-                var userId = uriSpan.Slice(uriSpan.IndexOf('?')).ToString().Split('=')[1];
-                jT1078WebSocketSessionManager.TryAdd(userId, ctx.Channel);
+            else {
+                SendHttpResponse(ctx, req, new DefaultFullHttpResponse(Http11, Unauthorized));
+                return;
             }
         }
 
@@ -141,6 +150,7 @@ namespace JT1078.DotNetty.WebSocket.Handlers
         public override void ExceptionCaught(IChannelHandlerContext ctx, Exception e)
         {
             logger.LogError(e, ctx.Channel.Id.AsShortText());
+            ctx.Channel.WriteAndFlushAsync(new DefaultFullHttpResponse(Http11, InternalServerError));
             jT1078WebSocketSessionManager.RemoveSessionByChannel(ctx.Channel);
             ctx.CloseAsync();
         }

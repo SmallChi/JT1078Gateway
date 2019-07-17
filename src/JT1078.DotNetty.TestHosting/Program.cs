@@ -66,6 +66,7 @@ namespace JT1078.DotNetty.TestHosting
                             //.Replace<JT1078UdpMessageHandlers>()
                             //.Builder()
                             .AddJT1078WebSocketHost()
+                           // .Replace()
                             .Builder();
                     services.AddHostedService<JT1078WebSocketPushHostedService>();
                 });

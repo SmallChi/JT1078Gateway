@@ -21,79 +21,43 @@ namespace JT1078.DotNetty.Core.Session
             logger = loggerFactory.CreateLogger<JT1078WebSocketSessionManager>();
         }
 
-        private ConcurrentDictionary<string, JT1078WebSocketSession> SessionIdDict = new ConcurrentDictionary<string, JT1078WebSocketSession>(StringComparer.OrdinalIgnoreCase);
+        private ConcurrentDictionary<string, JT1078WebSocketSession> SessionDict = new ConcurrentDictionary<string,JT1078WebSocketSession>();
 
         public int SessionCount
         {
             get
             {
-                return SessionIdDict.Count;
+                return SessionDict.Count;
             }
         }
 
-        public JT1078WebSocketSession GetSession(string userId)
+        public List<JT1078WebSocketSession> GetSessions(string userId)
         {
-            if (string.IsNullOrEmpty(userId))
-                return default;
-            if (SessionIdDict.TryGetValue(userId, out JT1078WebSocketSession targetSession))
-            {
-                return targetSession;
-            }
-            else
-            {
-                return default;
-            }
+           return SessionDict.Where(m => m.Value.UserId == userId).Select(m=>m.Value).ToList();
         }
 
-        public void TryAdd(string terminalPhoneNo,IChannel channel)
+        public void TryAdd(string userId,IChannel channel)
         {
-            if (SessionIdDict.TryGetValue(terminalPhoneNo, out JT1078WebSocketSession oldSession))
+            SessionDict.TryAdd(channel.Id.AsShortText(), new JT1078WebSocketSession(channel, userId));
+            if (logger.IsEnabled(LogLevel.Information))
             {
-                oldSession.LastActiveTime = DateTime.Now;
-                oldSession.Channel = channel;
-                SessionIdDict.TryUpdate(terminalPhoneNo, oldSession, oldSession);
+                logger.LogInformation($">>>{userId},{channel.Id.AsShortText()} Channel Connection.");
             }
-            else
-            {
-                JT1078WebSocketSession session = new JT1078WebSocketSession(channel, terminalPhoneNo);
-                if (SessionIdDict.TryAdd(terminalPhoneNo, session))
-                {
-
-                }
-            }
-        }
-
-        public JT1078WebSocketSession RemoveSession(string terminalPhoneNo)
-        {
-            if (string.IsNullOrEmpty(terminalPhoneNo)) return default;
-            if (SessionIdDict.TryRemove(terminalPhoneNo, out JT1078WebSocketSession sessionRemove))
-            {
-                logger.LogInformation($">>>{terminalPhoneNo} Session Remove.");
-                return sessionRemove;
-            }
-            else
-            {
-                return default;
-            }  
         }
 
         public void RemoveSessionByChannel(IChannel channel)
         {
-            var terminalPhoneNos = SessionIdDict.Where(w => w.Value.Channel.Id == channel.Id).Select(s => s.Key).ToList();
-            if (terminalPhoneNos.Count > 0)
+            if (channel.Open&& SessionDict.TryRemove(channel.Id.AsShortText(), out var session))
             {
-                foreach (var key in terminalPhoneNos)
+                if (logger.IsEnabled(LogLevel.Information))
                 {
-                    SessionIdDict.TryRemove(key, out JT1078WebSocketSession sessionRemove);
+                    logger.LogInformation($">>>{session.UserId},{session.Channel.Id.AsShortText()} Channel Remove.");
                 }
-                string nos = string.Join(",", terminalPhoneNos);
-                logger.LogInformation($">>>{nos} Channel Remove.");
             }
         }
-
         public IEnumerable<JT1078WebSocketSession> GetAll()
         {
-            return SessionIdDict.Select(s => s.Value).ToList();
+            return SessionDict.Select(s => s.Value).ToList();
         }
     }
 }

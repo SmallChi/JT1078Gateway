@@ -9,5 +9,6 @@ namespace JT1078.DotNetty.Core.Interfaces
     {
         IJT1078Builder Instance { get; }
         IJT1078Builder Builder();
+        IJT1078WebSocketBuilder Replace<T>() where T : IJT1078Authorization;
     }
 }

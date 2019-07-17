@@ -20,5 +20,11 @@ namespace JT1078.DotNetty.WebSocket
         {
             return Instance;
         }
+
+        public IJT1078WebSocketBuilder Replace<T>() where T : IJT1078Authorization
+        {
+            Instance.Services.Replace(new ServiceDescriptor(typeof(IJT1078Authorization), typeof(T), ServiceLifetime.Singleton));
+            return this;
+        }
     }
 }

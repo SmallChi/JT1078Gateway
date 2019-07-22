@@ -158,9 +158,8 @@ namespace JT1078.DotNetty.WebSocket.Handlers
         static string GetWebSocketLocation(IFullHttpRequest req)
         {
             bool result = req.Headers.TryGet(HttpHeaderNames.Host, out ICharSequence value);
-
             string location= value.ToString() + WebsocketPath;
-            return "ws://" + location;      
+            return "ws://" + location; 
         }
     }
 }

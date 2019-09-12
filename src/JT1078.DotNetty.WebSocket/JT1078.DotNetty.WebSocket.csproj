@@ -1,11 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\SharedProperties.props" />
+  <Import Project="..\Version.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.3</LangVersion>
+    <Copyright>Copyright 2019.</Copyright>
+    <Authors>SmallChi(Koike)</Authors>
     <PackageId>JT1078.DotNetty.WebSocket</PackageId>
     <Product>JT1078.DotNetty.WebSocket</Product>
     <Description>基于DotNetty实现的JT1078DotNetty的WebSocket服务</Description>
     <PackageReleaseNotes>基于DotNetty实现的JT1078DotNetty的WebSocket服务</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/SmallChi/JT1078DotNetty</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/SmallChi/JT1078DotNetty</PackageProjectUrl>
+    <licenseUrl>https://github.com/SmallChi/JT1078DotNetty/blob/master/LICENSE</licenseUrl>
+    <license>https://github.com/SmallChi/JT1078DotNetty/blob/master/LICENSE</license>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <SignAssembly>false</SignAssembly>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,5 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="..\JT1078.DotNetty.Core\JT1078.DotNetty.Core.csproj" />
   </ItemGroup>
-
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
 </Project>

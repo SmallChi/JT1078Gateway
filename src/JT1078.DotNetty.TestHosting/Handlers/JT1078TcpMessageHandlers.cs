@@ -29,7 +29,7 @@ namespace JT1078.DotNetty.TestHosting.Handlers
         {
             logger.LogInformation(JsonConvert.SerializeObject(request.Package));
             hexLogger.LogInformation($"{request.Package.SIM},{request.Package.SN},{request.Package.LogicChannelNumber},{request.Package.Label3.DataType.ToString()},{request.Package.Label3.SubpackageType.ToString()},{ByteBufferUtil.HexDump(request.Src)}");
-            jT1078DataService.DataBlockingCollection.TryAdd(request.Package);
+            jT1078DataService.DataBlockingCollection.TryAdd(request.Src);
             return Task.FromResult<JT1078Response>(default);
         }
     }

@@ -12,42 +12,47 @@ using System.Threading.Tasks;
 using JT1078.Protocol;
 using System.Collections.Concurrent;
 using JT1078.Protocol.Enums;
+using System.Diagnostics;
 
 namespace JT1078.DotNetty.TestHosting
 {
-    class FFMPEGRTMPHostedService : IHostedService
+    /// <summary>
+    /// 1.部署 RTMP 服务器 https://github.com/a1q123456/Harmonic
+    /// 2.使用ffplay播放器查看 ./ffplay rtmp://127.0.0.1/living/streamName
+    /// ref:
+    /// https://stackoverflow.com/questions/32157774/ffmpeg-output-pipeing-to-named-windows-pipe
+    /// https://mathewsachin.github.io/blog/2017/07/28/ffmpeg-pipe-csharp.html
+    /// https://csharp.hotexamples.com/examples/-/NamedPipeServerStream/-/php-namedpipeserverstream-class-examples.html
+    /// 
+    /// ffmpeg pipe作为客户端 
+    /// NamedPipeServerStream作为服务端
+    /// </summary>
+    class FFMPEGRTMPHostedService : BackgroundService
     {
-        private readonly JT1078DataService jT1078DataService;
-        private readonly FFMPEGRTMPPipingService fFMPEGPipingService;
-        public FFMPEGRTMPHostedService(
-            JT1078DataService jT1078DataService)
+        private readonly Process process;
+        public FFMPEGRTMPHostedService()
         {
-            this.jT1078DataService = jT1078DataService;
-            fFMPEGPipingService = new FFMPEGRTMPPipingService("demo1");
-        }
-        public Task StartAsync(CancellationToken cancellationToken)
-        {
-            Task.Run(() =>
+            process = new Process
             {
-
-                try
+                StartInfo =
                 {
-                    foreach (var item in jT1078DataService.DataBlockingCollection.GetConsumingEnumerable(cancellationToken))
-                    {
-                        fFMPEGPipingService.Wirte(item);
-                    }
+                    FileName = @"C:\ffmpeg\bin\ffmpeg.exe",
+                    Arguments = $@"-f dshow -i video={HardwareCamera.CameraName} -c copy -f flv -vcodec h264 {HardwareCamera.RTMPURL}",
+                    UseShellExecute = false,
+                    CreateNoWindow = true
                 }
-                catch(Exception ex)
-                {
-                    Console.WriteLine(ex);
-                }
-                
-            }, cancellationToken);
-            return Task.CompletedTask;
+            };
         }
 
-        public Task StopAsync(CancellationToken cancellationToken)
+        public override void Dispose()
         {
+            process.Dispose();
+            base.Dispose();
+        }
+
+        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            process.Start();
             return Task.CompletedTask;
         }
     }

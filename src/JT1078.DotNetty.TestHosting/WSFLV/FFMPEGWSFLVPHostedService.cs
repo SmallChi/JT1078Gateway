@@ -18,14 +18,24 @@ using Newtonsoft.Json;
 
 namespace JT1078.DotNetty.TestHosting
 {
-    class FFMPEGHTTPFLVPHostedService : BackgroundService
+    /// <summary>
+    /// 
+    /// </summary>
+    class FFMPEGWSFLVPHostedService :BackgroundService
     {
         private readonly Process process;
         private readonly NamedPipeServerStream pipeServerOut;
-        private const string PipeNameOut = "demo1serverout";
-        public FFMPEGHTTPFLVPHostedService()
+        private const string PipeNameOut = "demo2serverout";
+        private readonly JT1078WebSocketSessionManager jT1078WebSocketSessionManager;
+        /// <summary>
+        /// 需要缓存flv的第一包数据，当新用户进来先推送第一包的数据
+        /// </summary>
+        private byte[] flvFirstPackage;
+        private ConcurrentDictionary<string,byte> exists = new ConcurrentDictionary<string, byte>();
+        public FFMPEGWSFLVPHostedService(
+            JT1078WebSocketSessionManager jT1078WebSocketSessionManager)
         {
-            pipeServerOut = new NamedPipeServerStream(PipeNameOut, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous,10240,10240);
+            pipeServerOut = new NamedPipeServerStream(PipeNameOut, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous,102400,102400);
             process = new Process
             {
                 StartInfo =
@@ -34,11 +44,10 @@ namespace JT1078.DotNetty.TestHosting
                     Arguments = $@"-f dshow -i video={HardwareCamera.CameraName} -c copy -f flv -vcodec h264 -y \\.\pipe\{PipeNameOut}",
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    RedirectStandardError = true
                 }
             };
+            this.jT1078WebSocketSessionManager = jT1078WebSocketSessionManager;
         }
-
 
         public override void Dispose()
         {
@@ -74,7 +83,22 @@ namespace JT1078.DotNetty.TestHosting
                                 var length = pipeServerOut.Read(v1);
                                 var realValue = v1.Slice(0, length).ToArray();
                                 if (realValue.Length <= 0) continue;
-                                Console.WriteLine(JsonConvert.SerializeObject(realValue)+"-"+ length.ToString());
+                                if (flvFirstPackage == null)
+                                {
+                                    flvFirstPackage = realValue;
+                                }
+                                if (jT1078WebSocketSessionManager.GetAll().Count() > 0)
+                                {
+                                    foreach (var session in jT1078WebSocketSessionManager.GetAll())
+                                    {
+                                        if (!exists.ContainsKey(session.Channel.Id.AsShortText()))
+                                        {
+                                            session.Channel.WriteAndFlushAsync(new BinaryWebSocketFrame(Unpooled.WrappedBuffer(flvFirstPackage)));
+                                            exists.TryAdd(session.Channel.Id.AsShortText(), 0);
+                                        }
+                                       session.Channel.WriteAndFlushAsync(new BinaryWebSocketFrame(Unpooled.WrappedBuffer(realValue)));
+                                    }
+                                }
                             }
                         }
                         else

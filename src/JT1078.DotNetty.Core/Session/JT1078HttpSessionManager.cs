@@ -9,19 +9,19 @@ using JT1078.DotNetty.Core.Metadata;
 namespace JT1078.DotNetty.Core.Session
 {
     /// <summary>
-    /// JT1078 WebSocket会话管理
+    /// JT1078 http会话管理
     /// </summary>
-    public class JT1078WebSocketSessionManager
+    public class JT1078HttpSessionManager
     {
-        private readonly ILogger<JT1078WebSocketSessionManager> logger;
+        private readonly ILogger<JT1078HttpSessionManager> logger;
 
-        public JT1078WebSocketSessionManager(
+        public JT1078HttpSessionManager(
             ILoggerFactory loggerFactory)
         {
-            logger = loggerFactory.CreateLogger<JT1078WebSocketSessionManager>();
+            logger = loggerFactory.CreateLogger<JT1078HttpSessionManager>();
         }
 
-        private ConcurrentDictionary<string, JT1078WebSocketSession> SessionDict = new ConcurrentDictionary<string,JT1078WebSocketSession>();
+        private ConcurrentDictionary<string, JT1078HttpSession> SessionDict = new ConcurrentDictionary<string, JT1078HttpSession>();
 
         public int SessionCount
         {
@@ -31,14 +31,14 @@ namespace JT1078.DotNetty.Core.Session
             }
         }
 
-        public List<JT1078WebSocketSession> GetSessions(string userId)
+        public List<JT1078HttpSession> GetSessions(string userId)
         {
            return SessionDict.Where(m => m.Value.UserId == userId).Select(m=>m.Value).ToList();
         }
 
         public void TryAdd(string userId,IChannel channel)
         {
-            SessionDict.TryAdd(channel.Id.AsShortText(), new JT1078WebSocketSession(channel, userId));
+            SessionDict.TryAdd(channel.Id.AsShortText(), new JT1078HttpSession(channel, userId));
             if (logger.IsEnabled(LogLevel.Information))
             {
                 logger.LogInformation($">>>{userId},{channel.Id.AsShortText()} Channel Connection.");
@@ -55,7 +55,7 @@ namespace JT1078.DotNetty.Core.Session
                 }
             }
         }
-        public IEnumerable<JT1078WebSocketSession> GetAll()
+        public List<JT1078HttpSession> GetAll()
         {
             return SessionDict.Select(s => s.Value).ToList();
         }

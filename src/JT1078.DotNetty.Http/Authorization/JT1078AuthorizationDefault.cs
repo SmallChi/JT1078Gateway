@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Security.Principal;
 using System.Text;
 
-namespace JT1078.DotNetty.WebSocket.Authorization
+namespace JT1078.DotNetty.Http.Authorization
 {
     class JT1078AuthorizationDefault : IJT1078Authorization
     {

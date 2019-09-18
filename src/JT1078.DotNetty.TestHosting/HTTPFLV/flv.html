@@ -14,8 +14,8 @@
             var player = document.getElementById('player');
             var flvPlayer = flvjs.createPlayer({
                 type: 'flv',
-                isLive: true,
-                url: "ws://127.0.0.1:1818/jt1078live?token=" + Math.floor((Math.random() * 1000000) + 1)
+     		    isLive: true,
+                url: "http://127.0.0.1:1819/demo.flv?token=" + Math.floor((Math.random() * 1000000) + 1)
             });
             flvPlayer.attachMediaElement(player);
             flvPlayer.load();

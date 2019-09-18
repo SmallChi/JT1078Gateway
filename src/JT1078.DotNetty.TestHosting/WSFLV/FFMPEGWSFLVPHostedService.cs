@@ -21,19 +21,19 @@ namespace JT1078.DotNetty.TestHosting
     /// <summary>
     /// 
     /// </summary>
-    class FFMPEGWSFLVPHostedService :BackgroundService
+    class FFMPEGWSFLVPHostedService : IHostedService,IDisposable
     {
         private readonly Process process;
         private readonly NamedPipeServerStream pipeServerOut;
         private const string PipeNameOut = "demo2serverout";
-        private readonly JT1078WebSocketSessionManager jT1078WebSocketSessionManager;
+        private readonly JT1078HttpSessionManager jT1078HttpSessionManager;
         /// <summary>
         /// 需要缓存flv的第一包数据，当新用户进来先推送第一包的数据
         /// </summary>
         private byte[] flvFirstPackage;
         private ConcurrentDictionary<string,byte> exists = new ConcurrentDictionary<string, byte>();
         public FFMPEGWSFLVPHostedService(
-            JT1078WebSocketSessionManager jT1078WebSocketSessionManager)
+            JT1078HttpSessionManager jT1078HttpSessionManager)
         {
             pipeServerOut = new NamedPipeServerStream(PipeNameOut, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous,102400,102400);
             process = new Process
@@ -46,26 +46,15 @@ namespace JT1078.DotNetty.TestHosting
                     CreateNoWindow = true,
                 }
             };
-            this.jT1078WebSocketSessionManager = jT1078WebSocketSessionManager;
+            this.jT1078HttpSessionManager = jT1078HttpSessionManager;
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
-            try
-            {
-                process.Close();
-                pipeServerOut.Flush();
-            }
-            catch
-            {
-
-            }
-            process.Dispose();
             pipeServerOut.Dispose();
-            base.Dispose();
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             process.Start();
             Task.Run(() =>
@@ -87,16 +76,16 @@ namespace JT1078.DotNetty.TestHosting
                                 {
                                     flvFirstPackage = realValue;
                                 }
-                                if (jT1078WebSocketSessionManager.GetAll().Count() > 0)
+                                if (jT1078HttpSessionManager.GetAll().Count() > 0)
                                 {
-                                    foreach (var session in jT1078WebSocketSessionManager.GetAll())
+                                    foreach (var session in jT1078HttpSessionManager.GetAll())
                                     {
                                         if (!exists.ContainsKey(session.Channel.Id.AsShortText()))
                                         {
                                             session.Channel.WriteAndFlushAsync(new BinaryWebSocketFrame(Unpooled.WrappedBuffer(flvFirstPackage)));
                                             exists.TryAdd(session.Channel.Id.AsShortText(), 0);
                                         }
-                                       session.Channel.WriteAndFlushAsync(new BinaryWebSocketFrame(Unpooled.WrappedBuffer(realValue)));
+                                        session.Channel.WriteAndFlushAsync(new BinaryWebSocketFrame(Unpooled.WrappedBuffer(realValue)));
                                     }
                                 }
                             }
@@ -117,6 +106,22 @@ namespace JT1078.DotNetty.TestHosting
                     }
                 }
             });
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            try
+            {
+                process.Kill();
+                pipeServerOut.Flush();
+                pipeServerOut.Close();
+            }
+            catch
+            {
+
+               
+            }
             return Task.CompletedTask;
         }
     }

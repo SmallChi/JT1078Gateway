@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>hls demo</title>
+    <script src="hls.min.js"></script>
+</head>
+<body>
+    <h6>https://poanchen.github.io/blog/2016/11/17/how-to-play-mp4-video-using-hls</h6>
+    <video muted="muted" webkit-playsinline="true" autoplay="true" id="player"></video>
+    <script type="text/javascript">
+        var video = document.getElementById("player");
+        var videoSrcHls = "/hlsvideo/hls_ch1.m3u8";
+        if (Hls.isSupported()) {
+            var hls = new Hls();
+            hls.loadSource(videoSrcHls);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function () {
+                video.play();
+            });
+        }
+    </script>
+</body>
+</html>

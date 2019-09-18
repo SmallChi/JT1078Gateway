@@ -10,8 +10,7 @@ namespace JT1078.DotNetty.Core.Configurations
         public int TcpPort { get; set; } = 1808;
 
         public int UdpPort { get; set; } = 1808;
-
-        public int WebSocketPort { get; set; } = 1818;
+        public int HttpPort { get; set; } = 1818;
        
         public int QuietPeriodSeconds { get; set; } = 1;
 

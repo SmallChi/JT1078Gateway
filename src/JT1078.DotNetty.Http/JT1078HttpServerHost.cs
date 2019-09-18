@@ -8,7 +8,7 @@ using DotNetty.Transport.Channels;
 using DotNetty.Transport.Libuv;
 using JT1078.DotNetty.Core.Codecs;
 using JT1078.DotNetty.Core.Configurations;
-using JT1078.DotNetty.WebSocket.Handlers;
+using JT1078.DotNetty.Http.Handlers;
 using JT1078.Protocol;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -20,28 +20,28 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JT1078.DotNetty.WebSocket
+namespace JT1078.DotNetty.Http
 {
     /// <summary>
-    /// JT1078 WebSocket服务
+    /// JT1078 http服务
     /// </summary>
-    internal class JT1078WebSocketServerHost : IHostedService
+    internal class JT1078HttpServerHost : IHostedService
     {
         private readonly JT1078Configuration configuration;
-        private readonly ILogger<JT1078WebSocketServerHost> logger;
+        private readonly ILogger<JT1078HttpServerHost> logger;
         private DispatcherEventLoopGroup bossGroup;
         private WorkerEventLoopGroup workerGroup;
         private IChannel bootstrapChannel;
         private IByteBufferAllocator serverBufferAllocator;
         private readonly IServiceProvider serviceProvider;
-        public JT1078WebSocketServerHost(
+        public JT1078HttpServerHost(
             IServiceProvider serviceProvider,
             ILoggerFactory loggerFactory,
             IOptions<JT1078Configuration> configurationAccessor)
         {
             this.serviceProvider = serviceProvider;
             configuration = configurationAccessor.Value;
-            logger=loggerFactory.CreateLogger<JT1078WebSocketServerHost>();
+            logger=loggerFactory.CreateLogger<JT1078HttpServerHost>();
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -66,14 +66,15 @@ namespace JT1078.DotNetty.WebSocket
                     {
                         IChannelPipeline pipeline = channel.Pipeline;
                         pipeline.AddLast(new HttpServerCodec());
-                        pipeline.AddLast(new HttpObjectAggregator(65536));
+                        pipeline.AddLast(new HttpObjectAggregator(int.MaxValue));
+                        pipeline.AddLast("chunkedWriter", new ChunkedWriteHandler<IHttpContent>());
                         using (var scope = serviceProvider.CreateScope())
                         {
-                            pipeline.AddLast("JT1078WebSocketServerHandler", scope.ServiceProvider.GetRequiredService<JT1078WebSocketServerHandler>());
+                            pipeline.AddLast("JT1078HttpServerHandler", scope.ServiceProvider.GetRequiredService<JT1078HttpServerHandler>());
                         }
                     }));
-            logger.LogInformation($"JT1078 WebSocket Server start at {IPAddress.Any}:{configuration.WebSocketPort}.");
-            return bootstrap.BindAsync(configuration.WebSocketPort)
+            logger.LogInformation($"JT1078 Http Server start at {IPAddress.Any}:{configuration.HttpPort}.");
+            return bootstrap.BindAsync(configuration.HttpPort)
                 .ContinueWith(i => bootstrapChannel = i.Result);
         }
 

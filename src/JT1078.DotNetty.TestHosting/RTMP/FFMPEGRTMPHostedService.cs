@@ -27,7 +27,7 @@ namespace JT1078.DotNetty.TestHosting
     /// ffmpeg pipe作为客户端 
     /// NamedPipeServerStream作为服务端
     /// </summary>
-    class FFMPEGRTMPHostedService : BackgroundService
+    class FFMPEGRTMPHostedService : IHostedService
     {
         private readonly Process process;
         public FFMPEGRTMPHostedService()
@@ -44,15 +44,15 @@ namespace JT1078.DotNetty.TestHosting
             };
         }
 
-        public override void Dispose()
-        {
-            process.Dispose();
-            base.Dispose();
-        }
-
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        public Task StartAsync(CancellationToken cancellationToken)
         {
             process.Start();
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            process.Kill();
             return Task.CompletedTask;
         }
     }

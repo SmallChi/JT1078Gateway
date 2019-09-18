@@ -2,7 +2,7 @@
 using JT1078.DotNetty.Tcp;
 using JT1078.DotNetty.TestHosting.Handlers;
 using JT1078.DotNetty.Udp;
-using JT1078.DotNetty.WebSocket;
+using JT1078.DotNetty.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -64,14 +64,17 @@ namespace JT1078.DotNetty.TestHosting
                            // .AddJT1078UdpHost()
                            // .Replace<JT1078UdpMessageHandlers>()
                            // .Builder()
-                           .AddJT1078WebSocketHost()
-                           .Builder();
-                    //1.success 7-8s
+                           //.AddJT1078HttpHost()
+                           //.Builder();
+                           ;
+                    //1.success
                     //services.AddHostedService<FFMPEGRTMPHostedService>();
                     //2.test
-                    //services.AddHostedService<FFMPEGHTTPFLVPHostedService>();
-                    //3.success 6-7s
+                    //services.AddHostedService<FFMPEGHTTPFLVHostedService>();
+                    //3.success
                     //services.AddHostedService<FFMPEGWSFLVPHostedService>();
+                    //4.success
+                    services.AddHostedService<FFMPEGHLSHostedService>();
                 });
 
             await serverHostBuilder.RunConsoleAsync();

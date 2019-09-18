@@ -13,7 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.DotNetty.Udp", "JT10
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{1C26DF6A-2978-46B7-B921-BB7776CC6EE8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.DotNetty.WebSocket", "JT1078.DotNetty.WebSocket\JT1078.DotNetty.WebSocket.csproj", "{55181194-5AED-4C4B-8501-C8A17A3587B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.DotNetty.Http", "JT1078.DotNetty.Http\JT1078.DotNetty.Http.csproj", "{C6B9DB90-8A6C-4285-A03F-C03E2E8DF7CC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,10 +37,10 @@ Global
 		{6405D7FA-3B6E-4545-827E-BA13EB5BB268}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6405D7FA-3B6E-4545-827E-BA13EB5BB268}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6405D7FA-3B6E-4545-827E-BA13EB5BB268}.Release|Any CPU.Build.0 = Release|Any CPU
-		{55181194-5AED-4C4B-8501-C8A17A3587B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{55181194-5AED-4C4B-8501-C8A17A3587B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{55181194-5AED-4C4B-8501-C8A17A3587B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{55181194-5AED-4C4B-8501-C8A17A3587B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6B9DB90-8A6C-4285-A03F-C03E2E8DF7CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6B9DB90-8A6C-4285-A03F-C03E2E8DF7CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6B9DB90-8A6C-4285-A03F-C03E2E8DF7CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6B9DB90-8A6C-4285-A03F-C03E2E8DF7CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

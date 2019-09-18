@@ -14,27 +14,30 @@ using JT1078.DotNetty.Core.Session;
 using System.Text.RegularExpressions;
 using JT1078.DotNetty.Core.Interfaces;
 
-namespace JT1078.DotNetty.WebSocket.Handlers
+namespace JT1078.DotNetty.Http.Handlers
 {
-    public sealed class JT1078WebSocketServerHandler : SimpleChannelInboundHandler<object>
+    public sealed class JT1078HttpServerHandler : SimpleChannelInboundHandler<object>
     {
         const string WebsocketPath = "/jt1078live";
-
         WebSocketServerHandshaker handshaker;
+        private static readonly AsciiString ServerName = AsciiString.Cached("JT1078Netty");
+        private static readonly AsciiString DateEntity = HttpHeaderNames.Date;
+        private static readonly AsciiString ServerEntity = HttpHeaderNames.Server;
 
-        private readonly ILogger<JT1078WebSocketServerHandler> logger;
+        private readonly ILogger<JT1078HttpServerHandler> logger;
 
-        private readonly JT1078WebSocketSessionManager jT1078WebSocketSessionManager;
+        private readonly JT1078HttpSessionManager jT1078HttpSessionManager;
+
         private readonly IJT1078Authorization iJT1078Authorization;
 
-        public JT1078WebSocketServerHandler(
-            JT1078WebSocketSessionManager jT1078WebSocketSessionManager,
+        public JT1078HttpServerHandler(
+            JT1078HttpSessionManager jT1078HttpSessionManager,
             IJT1078Authorization iJT1078Authorization,
             ILoggerFactory loggerFactory)
         {
-            this.jT1078WebSocketSessionManager = jT1078WebSocketSessionManager;
+            this.jT1078HttpSessionManager = jT1078HttpSessionManager;
             this.iJT1078Authorization = iJT1078Authorization;
-            logger = loggerFactory.CreateLogger<JT1078WebSocketServerHandler>();
+            logger = loggerFactory.CreateLogger<JT1078HttpServerHandler>();
         }
 
         public override void ChannelInactive(IChannelHandlerContext context)
@@ -43,7 +46,7 @@ namespace JT1078.DotNetty.WebSocket.Handlers
             {
                 logger.LogInformation(context.Channel.Id.AsShortText());
             }
-            jT1078WebSocketSessionManager.RemoveSessionByChannel(context.Channel);
+            jT1078HttpSessionManager.RemoveSessionByChannel(context.Channel);
             base.ChannelInactive(context);
         }
 
@@ -69,12 +72,6 @@ namespace JT1078.DotNetty.WebSocket.Handlers
                 SendHttpResponse(ctx, req, new DefaultFullHttpResponse(Http11, BadRequest));
                 return;
             }
-            // Allow only GET methods.
-            if (!Equals(req.Method, HttpMethod.Get))
-            {
-                SendHttpResponse(ctx, req, new DefaultFullHttpResponse(Http11, Forbidden));
-                return;
-            }
             if ("/favicon.ico".Equals(req.Uri))
             {
                 var res = new DefaultFullHttpResponse(Http11, NotFound);
@@ -83,17 +80,24 @@ namespace JT1078.DotNetty.WebSocket.Handlers
             }
             if (iJT1078Authorization.Authorization(req, out var principal))
             {
-                // Handshake
-                var wsFactory = new WebSocketServerHandshakerFactory(GetWebSocketLocation(req), null, true, 5 * 1024 * 1024);
-                this.handshaker = wsFactory.NewHandshaker(req);
-                if (this.handshaker == null)
+                if (req.Uri.StartsWith(WebsocketPath))
                 {
-                    WebSocketServerHandshakerFactory.SendUnsupportedVersionResponse(ctx.Channel);
+                    // Handshake
+                    var wsFactory = new WebSocketServerHandshakerFactory(GetWebSocketLocation(req), null, true, 5 * 1024 * 1024);
+                    this.handshaker = wsFactory.NewHandshaker(req);
+                    if (this.handshaker == null)
+                    {
+                        WebSocketServerHandshakerFactory.SendUnsupportedVersionResponse(ctx.Channel);
+                    }
+                    else
+                    {
+                        this.handshaker.HandshakeAsync(ctx.Channel, req);
+                        jT1078HttpSessionManager.TryAdd(principal.Identity.Name, ctx.Channel);
+                    }
                 }
                 else
                 {
-                    this.handshaker.HandshakeAsync(ctx.Channel, req);
-                    jT1078WebSocketSessionManager.TryAdd(principal.Identity.Name, ctx.Channel);
+                    jT1078HttpSessionManager.TryAdd(principal.Identity.Name, ctx.Channel);
                 }
             }
             else {
@@ -133,6 +137,8 @@ namespace JT1078.DotNetty.WebSocket.Handlers
             // Generate an error page if response getStatus code is not OK (200).
             if (res.Status.Code != 200)
             {
+                res.Headers.Set(ServerEntity, ServerName);
+                res.Headers.Set(DateEntity, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
                 IByteBuffer buf = Unpooled.CopiedBuffer(Encoding.UTF8.GetBytes(res.Status.ToString()));
                 res.Content.WriteBytes(buf);
                 buf.Release();
@@ -142,17 +148,23 @@ namespace JT1078.DotNetty.WebSocket.Handlers
             Task task = ctx.Channel.WriteAndFlushAsync(res);
             if (!HttpUtil.IsKeepAlive(req) || res.Status.Code != 200)
             {
-                task.ContinueWith((t, c) => ((IChannelHandlerContext)c).CloseAsync(), 
-                    ctx, TaskContinuationOptions.ExecuteSynchronously);
+                task.ContinueWith((t, c) => ((IChannelHandlerContext)c).CloseAsync(), ctx, TaskContinuationOptions.ExecuteSynchronously);
             }
         }
 
-        public override void ExceptionCaught(IChannelHandlerContext ctx, Exception e)
+        public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
-            logger.LogError(e, ctx.Channel.Id.AsShortText());
-            ctx.Channel.WriteAndFlushAsync(new DefaultFullHttpResponse(Http11, InternalServerError));
-            jT1078WebSocketSessionManager.RemoveSessionByChannel(ctx.Channel);
-            ctx.CloseAsync();
+            logger.LogError(exception, context.Channel.Id.AsShortText());
+            context.Channel.WriteAndFlushAsync(new DefaultFullHttpResponse(Http11, InternalServerError));
+            jT1078HttpSessionManager.RemoveSessionByChannel(context.Channel);
+            CloseAsync(context);
+            base.ExceptionCaught(context, exception);
+        }
+
+        public override Task CloseAsync(IChannelHandlerContext context)
+        {
+            jT1078HttpSessionManager.RemoveSessionByChannel(context.Channel);
+            return base.CloseAsync(context);
         }
 
         static string GetWebSocketLocation(IFullHttpRequest req)

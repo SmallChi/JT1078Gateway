@@ -4,9 +4,9 @@ using System.Net;
 
 namespace JT1078.DotNetty.Core.Metadata
 {
-    public class JT1078WebSocketSession
+    public class JT1078HttpSession
     {
-        public JT1078WebSocketSession(
+        public JT1078HttpSession(
             IChannel channel,
             string userId)
         {
@@ -16,7 +16,7 @@ namespace JT1078.DotNetty.Core.Metadata
             LastActiveTime = DateTime.Now;
         }
 
-        public JT1078WebSocketSession() { }
+        public JT1078HttpSession() { }
 
         public string UserId { get; set; }
 

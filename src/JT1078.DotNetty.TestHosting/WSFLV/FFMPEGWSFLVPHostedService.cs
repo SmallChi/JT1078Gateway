@@ -1,6 +1,7 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Codecs.Http.WebSockets;
 using JT1078.DotNetty.Core.Session;
+using JT1078.DotNetty.Core.Extensions;
 using Microsoft.Extensions.Hosting;
 using System;
 using System.Collections.Generic;
@@ -82,10 +83,10 @@ namespace JT1078.DotNetty.TestHosting
                                     {
                                         if (!exists.ContainsKey(session.Channel.Id.AsShortText()))
                                         {
-                                            session.Channel.WriteAndFlushAsync(new BinaryWebSocketFrame(Unpooled.WrappedBuffer(flvFirstPackage)));
+                                            session.SendBinaryWebSocketAsync(flvFirstPackage);
                                             exists.TryAdd(session.Channel.Id.AsShortText(), 0);
                                         }
-                                        session.Channel.WriteAndFlushAsync(new BinaryWebSocketFrame(Unpooled.WrappedBuffer(realValue)));
+                                        session.SendBinaryWebSocketAsync(realValue);
                                     }
                                 }
                             }
@@ -95,7 +96,7 @@ namespace JT1078.DotNetty.TestHosting
                             if (!pipeServerOut.IsConnected)
                             {
                                 Console.WriteLine("WaitForConnection Star...");
-                                pipeServerOut.WaitForConnectionAsync();
+                                pipeServerOut.WaitForConnectionAsync().Wait(300);
                                 Console.WriteLine("WaitForConnection End...");
                             }
                         }

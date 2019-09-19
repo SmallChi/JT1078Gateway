@@ -20,5 +20,17 @@ namespace JT1078.DotNetty.Http
         {
             return Instance;
         }
+
+        public IJT1078HttpBuilder Replace<T>() where T : IJT1078Authorization
+        {
+            Instance.Services.Replace(new ServiceDescriptor(typeof(IJT1078Authorization), typeof(T), ServiceLifetime.Singleton));
+            return this;
+        }
+
+        public IJT1078HttpBuilder UseHttpMiddleware<T>() where T : IHttpMiddleware
+        {
+            Instance.Services.TryAdd(new ServiceDescriptor(typeof(IHttpMiddleware), typeof(T), ServiceLifetime.Singleton));
+            return this;
+        }
     }
 }

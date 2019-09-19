@@ -64,16 +64,19 @@ namespace JT1078.DotNetty.TestHosting
                            // .AddJT1078UdpHost()
                            // .Replace<JT1078UdpMessageHandlers>()
                            // .Builder()
-                           //.AddJT1078HttpHost()
-                           //.Builder();
+                           .AddJT1078HttpHost()
+                           //.UseHttpMiddleware<CustomHttpMiddleware>()
+                           .Builder()
                            ;
+                    //使用ffmpeg工具
                     //1.success
                     //services.AddHostedService<FFMPEGRTMPHostedService>();
-                    //2.test
+                    //2.success
                     //services.AddHostedService<FFMPEGHTTPFLVHostedService>();
                     //3.success
                     //services.AddHostedService<FFMPEGWSFLVPHostedService>();
                     //4.success
+                    //http://127.0.0.1:5001/HLS/hls.html
                     services.AddHostedService<FFMPEGHLSHostedService>();
                 });
 

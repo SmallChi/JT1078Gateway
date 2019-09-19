@@ -15,11 +15,5 @@ namespace JT1078.DotNetty.Core.Impl
         {
             Services = services;
         }
-
-        public IJT1078Builder Replace<T>() where T : IJT1078SourcePackageDispatcher
-        {
-            Services.Replace(new ServiceDescriptor(typeof(IJT1078SourcePackageDispatcher), typeof(T), ServiceLifetime.Singleton));
-            return this;
-        }
     }
 }

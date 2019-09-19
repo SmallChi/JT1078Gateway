@@ -23,16 +23,12 @@ namespace JT1078.DotNetty.Udp.Handlers
         private readonly JT1078AtomicCounterService AtomicCounterService;
 
         private readonly IJT1078UdpMessageHandlers handlers;
-
-        private readonly IJT1078SourcePackageDispatcher sourcePackageDispatcher;
         public JT1078UdpServerHandler(
-            IJT1078SourcePackageDispatcher sourcePackageDispatcher,
             ILoggerFactory loggerFactory,
             JT1078AtomicCounterServiceFactory  atomicCounterServiceFactory,
             IJT1078UdpMessageHandlers handlers,
             JT1078UdpSessionManager sessionManager)
         {
-            this.sourcePackageDispatcher = sourcePackageDispatcher;
             this.AtomicCounterService = atomicCounterServiceFactory.Create(JT1078TransportProtocolType.udp);
             this.SessionManager = sessionManager;
             logger = loggerFactory.CreateLogger<JT1078UdpServerHandler>();
@@ -43,7 +39,6 @@ namespace JT1078.DotNetty.Udp.Handlers
         {
             try
             {
-                sourcePackageDispatcher.SendAsync(msg.Buffer);
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
                     logger.LogTrace("accept package success count<<<" + AtomicCounterService.MsgSuccessCount.ToString());

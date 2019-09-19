@@ -30,13 +30,17 @@ namespace JT1078.DotNetty.Http.Handlers
 
         private readonly IJT1078Authorization iJT1078Authorization;
 
+        private readonly IHttpMiddleware httpMiddleware;
+
         public JT1078HttpServerHandler(
             JT1078HttpSessionManager jT1078HttpSessionManager,
             IJT1078Authorization iJT1078Authorization,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory loggerFactory,
+            IHttpMiddleware httpMiddleware = null)
         {
             this.jT1078HttpSessionManager = jT1078HttpSessionManager;
             this.iJT1078Authorization = iJT1078Authorization;
+            this.httpMiddleware = httpMiddleware;
             logger = loggerFactory.CreateLogger<JT1078HttpServerHandler>();
         }
 
@@ -93,11 +97,13 @@ namespace JT1078.DotNetty.Http.Handlers
                     {
                         this.handshaker.HandshakeAsync(ctx.Channel, req);
                         jT1078HttpSessionManager.TryAdd(principal.Identity.Name, ctx.Channel);
+                        httpMiddleware?.Next(ctx, req, principal);
                     }
                 }
                 else
                 {
                     jT1078HttpSessionManager.TryAdd(principal.Identity.Name, ctx.Channel);
+                    httpMiddleware?.Next(ctx, req, principal);
                 }
             }
             else {

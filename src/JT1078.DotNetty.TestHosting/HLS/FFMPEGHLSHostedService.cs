@@ -59,7 +59,7 @@ namespace JT1078.DotNetty.TestHosting
                 StartInfo =
                 {
                     FileName = @"C:\ffmpeg\bin\ffmpeg.exe",
-                    Arguments = $@"-f dshow -i video={HardwareCamera.CameraName} -vcodec h264 -start_number 0 -hls_list_size 0 -f hls {filePath}",
+                    Arguments = $@"-f dshow -i video={HardwareCamera.CameraName} -vcodec h264 -start_number 0 -hls_list_size 10 -f hls {filePath}",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 }
@@ -93,8 +93,8 @@ namespace JT1078.DotNetty.TestHosting
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            webHost.WaitForShutdownAsync();
             process.Kill();
+            webHost.WaitForShutdownAsync();
             return Task.CompletedTask;
         }
     }

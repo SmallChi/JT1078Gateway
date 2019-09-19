@@ -51,7 +51,6 @@ namespace JT1078.DotNetty.Core
             }
             IJT1078Builder builder = new JT1078BuilderDefault(serviceDescriptors);
             builder.Services.Configure<JT1078Configuration>(configuration.GetSection("JT1078Configuration"));
-            builder.Services.TryAddSingleton<IJT1078SourcePackageDispatcher, JT1078SourcePackageDispatcherDefault>();
             builder.Services.TryAddSingleton<JT1078AtomicCounterServiceFactory>();
             return builder;
         }
@@ -70,7 +69,6 @@ namespace JT1078.DotNetty.Core
             }
             IJT1078Builder builder = new JT1078BuilderDefault(serviceDescriptors);
             builder.Services.Configure(jt1078Options);
-            builder.Services.TryAddSingleton<IJT1078SourcePackageDispatcher, JT1078SourcePackageDispatcherDefault>();
             builder.Services.TryAddSingleton<JT1078AtomicCounterService>();
             builder.Services.TryAddSingleton<JT1078AtomicCounterServiceFactory>();
             return builder;

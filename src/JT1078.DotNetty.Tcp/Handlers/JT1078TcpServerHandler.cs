@@ -24,16 +24,12 @@ namespace JT1078.DotNetty.Tcp.Handlers
 
         private readonly IJT1078TcpMessageHandlers handlers;
 
-        private readonly IJT1078SourcePackageDispatcher sourcePackageDispatcher;
-
         public JT1078TcpServerHandler(
-            IJT1078SourcePackageDispatcher sourcePackageDispatcher,
             IJT1078TcpMessageHandlers handlers,
             ILoggerFactory loggerFactory,
             JT1078AtomicCounterServiceFactory atomicCounterServiceFactory,
             JT1078TcpSessionManager sessionManager)
         {
-            this.sourcePackageDispatcher = sourcePackageDispatcher;
             this.handlers = handlers;
             this.SessionManager = sessionManager;
             this.AtomicCounterService = atomicCounterServiceFactory.Create(JT1078TransportProtocolType.tcp);
@@ -45,7 +41,6 @@ namespace JT1078.DotNetty.Tcp.Handlers
         {
             try
             {
-                sourcePackageDispatcher.SendAsync(msg);
                 if (logger.IsEnabled(LogLevel.Trace))
                 {
                     logger.LogTrace("accept package success count<<<" + AtomicCounterService.MsgSuccessCount.ToString());

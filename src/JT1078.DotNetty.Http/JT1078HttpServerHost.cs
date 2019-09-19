@@ -1,6 +1,8 @@
 ﻿using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Codecs.Http;
+using DotNetty.Codecs.Http.Cors;
+using DotNetty.Common.Utilities;
 using DotNetty.Handlers.Streams;
 using DotNetty.Handlers.Timeout;
 using DotNetty.Transport.Bootstrapping;
@@ -66,8 +68,15 @@ namespace JT1078.DotNetty.Http
                     {
                         IChannelPipeline pipeline = channel.Pipeline;
                         pipeline.AddLast(new HttpServerCodec());
+                        pipeline.AddLast(new CorsHandler(CorsConfigBuilder
+                                     .ForAnyOrigin()
+                                     .AllowNullOrigin()
+                                     .AllowedRequestMethods(HttpMethod.Get, HttpMethod.Post, HttpMethod.Options, HttpMethod.Delete)
+                                     .AllowedRequestHeaders((AsciiString)"origin", (AsciiString)"range", (AsciiString)"accept-encoding", (AsciiString)"referer", (AsciiString)"Cache-Control", (AsciiString)"X-Proxy-Authorization", (AsciiString)"X-Requested-With", (AsciiString)"Content-Type")
+                                     .ExposeHeaders((StringCharSequence)"Server", (StringCharSequence)"range", (StringCharSequence)"Content-Length", (StringCharSequence)"Content-Range")
+                                     .AllowCredentials()
+                                     .Build()));
                         pipeline.AddLast(new HttpObjectAggregator(int.MaxValue));
-                        pipeline.AddLast("chunkedWriter", new ChunkedWriteHandler<IHttpContent>());
                         using (var scope = serviceProvider.CreateScope())
                         {
                             pipeline.AddLast("JT1078HttpServerHandler", scope.ServiceProvider.GetRequiredService<JT1078HttpServerHandler>());

@@ -9,5 +9,7 @@ namespace JT1078.DotNetty.Core.Interfaces
     {
         IJT1078Builder Instance { get; }
         IJT1078Builder Builder();
+        IJT1078HttpBuilder Replace<T>() where T : IJT1078Authorization;
+        IJT1078HttpBuilder UseHttpMiddleware<T>() where T : IHttpMiddleware;
     }
 }

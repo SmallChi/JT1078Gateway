@@ -79,7 +79,6 @@ namespace JT1078.DotNetty.TestHosting
                     //http://127.0.0.1:5001/HLS/hls.html
                     services.AddHostedService<FFMPEGHLSHostedService>();
                 });
-
             await serverHostBuilder.RunConsoleAsync();
         }
     }

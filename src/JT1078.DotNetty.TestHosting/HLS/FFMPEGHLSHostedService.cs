@@ -32,8 +32,10 @@ namespace JT1078.DotNetty.TestHosting
 {
     /// <summary>
     /// 
-    /// -segment_time 5秒切片
-    /// ./ffmpeg -f dshow -i video="USB2.0 PC CAMERA" -start_number 0 -hls_list_size 0 -f hls "D:\v\sample.m3u8 -segment_time 5"
+    /// -hls_list_size 10  m3u8内部文件内部保留10个集合
+    /// -segment_time 10秒切片
+    /// -hls_wrap 可以让切片文件进行循环 就不会导致产生很多文件了 占用很多空间
+    /// ./ffmpeg -f dshow -i video="USB2.0 PC CAMERA" -hls_wrap 20 -start_number 0 -hls_list_size 10 -f hls "D:\v\sample.m3u8 -segment_time 10"
     /// </summary>
     class FFMPEGHLSHostedService : IHostedService
     {
@@ -59,7 +61,7 @@ namespace JT1078.DotNetty.TestHosting
                 StartInfo =
                 {
                     FileName = @"C:\ffmpeg\bin\ffmpeg.exe",
-                    Arguments = $@"-f dshow -i video={HardwareCamera.CameraName} -vcodec h264 -start_number 0 -hls_list_size 10 -f hls {filePath}",
+                    Arguments = $@"-f dshow -i video={HardwareCamera.CameraName} -vcodec h264 -hls_wrap 20 -start_number 0 -hls_list_size 10 -f hls {filePath} -segment_time 10",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 }
@@ -93,7 +95,13 @@ namespace JT1078.DotNetty.TestHosting
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            process.Kill();
+            try
+            {
+                process.Kill();
+            }
+            catch
+            {
+            }
             webHost.WaitForShutdownAsync();
             return Task.CompletedTask;
         }

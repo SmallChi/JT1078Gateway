@@ -18,10 +18,18 @@
     <PackageReference Include="NLog.Extensions.Logging" Version="1.5.1" />
   </ItemGroup>
 
+
   <ItemGroup>
     <ProjectReference Include="..\JT1078.DotNetty.Http\JT1078.DotNetty.Http.csproj" />
     <ProjectReference Include="..\JT1078.DotNetty.Tcp\JT1078.DotNetty.Tcp.csproj" />
     <ProjectReference Include="..\JT1078.DotNetty.Udp\JT1078.DotNetty.Udp.csproj" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Reference Include="JT1078.Flv">
+      <HintPath>dll\JT1078.Flv.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -50,6 +58,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="HTTPFLV\flv.min.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="JT1078WSFlv\flv.min.js">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="JT1078WSFlv\index.html">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

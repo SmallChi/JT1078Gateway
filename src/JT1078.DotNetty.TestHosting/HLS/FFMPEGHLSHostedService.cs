@@ -61,7 +61,7 @@ namespace JT1078.DotNetty.TestHosting
                 StartInfo =
                 {
                     FileName = @"C:\ffmpeg\bin\ffmpeg.exe",
-                    Arguments = $@"-f dshow -i video={HardwareCamera.CameraName} -vcodec h264 -hls_wrap 20 -start_number 0 -hls_list_size 10 -f hls {filePath} -segment_time 10",
+                    Arguments = $@"-f dshow -i video={HardwareCamera.CameraName} -vcodec h264 -hls_wrap 10 -start_number 0 -hls_list_size 10 -f hls {filePath} -segment_time 10",
                     UseShellExecute = false,
                     CreateNoWindow = true
                 }

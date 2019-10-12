@@ -22,7 +22,7 @@ namespace JT1078.DotNetty.TestHosting
     /// <summary>
     /// 
     /// </summary>
-    class FFMPEGWSFLVPHostedService : IHostedService,IDisposable
+    class FFMPEGWSFLVHostedService : IHostedService,IDisposable
     {
         private readonly Process process;
         private readonly NamedPipeServerStream pipeServerOut;
@@ -33,7 +33,7 @@ namespace JT1078.DotNetty.TestHosting
         /// </summary>
         private byte[] flvFirstPackage;
         private ConcurrentDictionary<string,byte> exists = new ConcurrentDictionary<string, byte>();
-        public FFMPEGWSFLVPHostedService(
+        public FFMPEGWSFLVHostedService(
             JT1078HttpSessionManager jT1078HttpSessionManager)
         {
             pipeServerOut = new NamedPipeServerStream(PipeNameOut, PipeDirection.In, 1, PipeTransmissionMode.Byte, PipeOptions.Asynchronous,102400,102400);

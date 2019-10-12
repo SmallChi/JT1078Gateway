@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+using JT1078.DotNetty.TestHosting.JT1078WSFlv;
 
 namespace JT1078.DotNetty.TestHosting
 {
@@ -55,18 +56,19 @@ namespace JT1078.DotNetty.TestHosting
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
+                    services.AddSingleton<JT1078WSFlvDataService>();
                     services.AddSingleton<ILoggerFactory, LoggerFactory>();
                     services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
                     services.AddJT1078Core(hostContext.Configuration)
-                           // .AddJT1078TcpHost()
-                           // .Replace<JT1078TcpMessageHandlers>()
-                           // .Builder()
-                           // .AddJT1078UdpHost()
-                           // .Replace<JT1078UdpMessageHandlers>()
-                           // .Builder()
+                            .AddJT1078TcpHost()
+                            .Replace<JT1078TcpMessageHandlers>()
+                            .Builder()
+                            //.AddJT1078UdpHost()
+                            //.Replace<JT1078UdpMessageHandlers>()
+                            // .Builder()
                            .AddJT1078HttpHost()
                            //.UseHttpMiddleware<CustomHttpMiddleware>()
-                           .Builder()
+                           //.Builder()
                            ;
                     //使用ffmpeg工具
                     //1.success
@@ -77,7 +79,9 @@ namespace JT1078.DotNetty.TestHosting
                     //services.AddHostedService<FFMPEGWSFLVPHostedService>();
                     //4.success
                     //http://127.0.0.1:5001/HLS/hls.html
-                    services.AddHostedService<FFMPEGHLSHostedService>();
+                    //services.AddHostedService<FFMPEGHLSHostedService>();
+
+                    services.AddHostedService<JT1078WSFlvHostedService>();
                 });
             await serverHostBuilder.RunConsoleAsync();
         }

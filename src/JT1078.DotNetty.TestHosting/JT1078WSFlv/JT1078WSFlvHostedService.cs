@@ -33,7 +33,7 @@ namespace JT1078.DotNetty.TestHosting
         private ConcurrentDictionary<string, byte> exists = new ConcurrentDictionary<string, byte>();
 
         private readonly JT1078WSFlvDataService jT1078WSFlvDataService;
-        private readonly FlvEncoder FlvEncoder = new FlvEncoder();
+        private readonly FlvEncoder FlvEncoder;
         private readonly ILogger logger;
         private readonly ILogger flvEncodingLogger;
         public JT1078WSFlvHostedService(
@@ -45,6 +45,7 @@ namespace JT1078.DotNetty.TestHosting
             flvEncodingLogger = loggerFactory.CreateLogger("FlvEncoding");
             this.jT1078WSFlvDataService = jT1078WSFlvDataServic;
             this.jT1078HttpSessionManager = jT1078HttpSessionManager;
+            FlvEncoder = new FlvEncoder(loggerFactory);
         }
 
         public Task StartAsync(CancellationToken cancellationToken)

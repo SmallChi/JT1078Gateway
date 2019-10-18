@@ -17,6 +17,7 @@
     <SignAssembly>false</SignAssembly>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Version>$(JT1078DotNettyPackageVersion)</Version>
   </PropertyGroup>
 
   <ItemGroup>

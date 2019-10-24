@@ -1,1 +1,0 @@
-dotnet nuget push .\nupkgs\*.nupkg -k apikey -s https://api.nuget.org/v3/index.json

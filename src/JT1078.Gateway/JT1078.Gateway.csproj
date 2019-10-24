@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>8.0</LangVersion>
+    <Copyright>Copyright 2019.</Copyright>
+    <Authors>SmallChi(Koike)</Authors>
+    <PackageId>JT1078.Gateway</PackageId>
+    <Product>JT1078.Gateway</Product>
+    <Description>基于DotNetty实现的JT1078DotNetty的库</Description>
+    <PackageReleaseNotes>基于DotNetty实现的JT1078DotNetty的库</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/SmallChi/JT1078DotNetty</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/SmallChi/JT1078DotNetty</PackageProjectUrl>
+    <licenseUrl>https://github.com/SmallChi/JT1078DotNetty/blob/master/LICENSE</licenseUrl>
+    <license>https://github.com/SmallChi/JT1078DotNetty/blob/master/LICENSE</license>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <SignAssembly>false</SignAssembly>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <Version>1.0.0-preview1</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetty.Codecs.Http" Version="0.6.0" />
+    <PackageReference Include="DotNetty.Handlers" Version="0.6.0" />
+    <PackageReference Include="DotNetty.Transport.Libuv" Version="0.6.0" />
+    <PackageReference Include="DotNetty.Codecs" Version="0.6.0" />
+    <PackageReference Include="JT1078" Version="1.0.2" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="3.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
+</Project>

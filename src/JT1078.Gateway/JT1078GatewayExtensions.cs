@@ -1,12 +1,10 @@
-﻿using JT1078.Gateway.Configurations;
+﻿using JT1078.Gateway.Abstractions;
+using JT1078.Gateway.Configurations;
 using JT1078.Gateway.Impl;
-using JT1078.Gateway.Interfaces;
-using JT1078.Gateway.Session.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using System;
 using System.Runtime.CompilerServices;
 
@@ -21,7 +19,6 @@ namespace JT1078.Gateway
         {
             IJT1078Builder builder = new JT1078BuilderDefault(serviceDescriptors);
             builder.Services.Configure<JT1078Configuration>(configuration.GetSection("JT1078Configuration"));
-            builder.Services.TryAddSingleton<JT1078AtomicCounterServiceFactory>();
             return builder;
         }
 
@@ -29,8 +26,6 @@ namespace JT1078.Gateway
         {
             IJT1078Builder builder = new JT1078BuilderDefault(serviceDescriptors);
             builder.Services.Configure(jt1078Options);
-            builder.Services.TryAddSingleton<JT1078AtomicCounterService>();
-            builder.Services.TryAddSingleton<JT1078AtomicCounterServiceFactory>();
             return builder;
         }
     }

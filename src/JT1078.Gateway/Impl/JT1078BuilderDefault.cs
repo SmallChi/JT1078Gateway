@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using JT1078.Gateway.Interfaces;
+﻿using JT1078.Gateway.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace JT1078.Gateway.Impl
 {

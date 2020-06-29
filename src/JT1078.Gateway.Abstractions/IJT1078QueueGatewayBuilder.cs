@@ -3,10 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace JT1078.Gateway.Interfaces
+namespace JT1078.Gateway.Abstractions
 {
-    public interface IJT1078Builder
+    public interface IJT1078QueueGatewayBuilder: IJT1078GatewayBuilder
     {
-        IServiceCollection Services { get; }
+
     }
 }

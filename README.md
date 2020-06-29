@@ -1,4 +1,4 @@
-﻿# JT1078DotNetty
+﻿# JT1078.Gateway
 
 ## 前提条件
 

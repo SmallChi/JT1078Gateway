@@ -1,0 +1,12 @@
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace JT1078.Gateway.Abstractions
+{
+    public interface IJT1078NormalGatewayBuilder: IJT1078GatewayBuilder
+    {
+
+    }
+}

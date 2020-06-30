@@ -16,7 +16,7 @@
     <SignAssembly>false</SignAssembly>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>1.0.0-preview1</Version>
+    <Version>1.0.0-preview2</Version>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Codecs\**" />
@@ -40,6 +40,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Remove="Metadata\JT1078HttpSession.cs" />
+    <Compile Remove="Metadata\JT1078Request.cs" />
+    <Compile Remove="Metadata\JT1078Response.cs" />
   </ItemGroup>
 
   <ItemGroup>

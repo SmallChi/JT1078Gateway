@@ -52,7 +52,7 @@ namespace JT1078.Gateway
         {
             SessionManager = jT1078SessionManager;
             jT1078UseType = JT1078UseType.Normal;
-            Logger = loggerFactory.CreateLogger("JT1078TcpServer");
+            Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
             Configuration = jT1078ConfigurationAccessor.Value;
             this.jT1078PackageProducer = jT1078PackageProducer;
             InitServer();
@@ -73,7 +73,7 @@ namespace JT1078.Gateway
         {
             SessionManager = jT1078SessionManager;
             jT1078UseType = JT1078UseType.Queue;
-            Logger = loggerFactory.CreateLogger("JT1078TcpServer");
+            Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
             Configuration = jT1078ConfigurationAccessor.Value;
             this.jT1078MsgProducer = jT1078MsgProducer;
             InitServer();

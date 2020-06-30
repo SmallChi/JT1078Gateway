@@ -1,5 +1,6 @@
 ﻿using JT1078.Gateway.Abstractions;
 using JT1078.Gateway.Abstractions.Enums;
+using JT1078.Gateway.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
@@ -20,11 +21,15 @@ namespace JT1078.Gateway.Sessions
         private readonly ILogger logger;
         public ConcurrentDictionary<string, IJT1078Session> Sessions { get; }
         public ConcurrentDictionary<string, IJT1078Session> TerminalPhoneNoSessions { get; }
-        public JT1078SessionManager(ILoggerFactory loggerFactory)
+        private readonly JT1078SessionNoticeService SessionNoticeService;
+        public JT1078SessionManager(
+            JT1078SessionNoticeService jT1078SessionNoticeService,
+            ILoggerFactory loggerFactory)
         {
             Sessions = new ConcurrentDictionary<string, IJT1078Session>(StringComparer.OrdinalIgnoreCase);
             TerminalPhoneNoSessions = new ConcurrentDictionary<string, IJT1078Session>(StringComparer.OrdinalIgnoreCase);
-            logger = loggerFactory.CreateLogger("JT1078SessionManager");
+            logger = loggerFactory.CreateLogger<JT1078SessionManager>();
+            this.SessionNoticeService = jT1078SessionNoticeService;
         }
 
         public int TotalSessionCount
@@ -62,8 +67,7 @@ namespace JT1078.Gateway.Sessions
                     session.ActiveTime = curretDatetime;
                     TerminalPhoneNoSessions.TryUpdate(terminalPhoneNo, session, cacheSession);
                     //会话通知
-                    //todo: 会话通知
-
+                    SessionNoticeService.SessionNoticeBlockingCollection.Add((JT1078GatewayConstants.SessionOnline, terminalPhoneNo, session.TransportProtocolType.ToString()));
                 }
                 else
                 {
@@ -77,40 +81,7 @@ namespace JT1078.Gateway.Sessions
                 if (TerminalPhoneNoSessions.TryAdd(terminalPhoneNo, session))
                 {
                     //会话通知
-                    //todo: 会话通知
-
-                }
-            }
-        }
-
-        internal void TryLink(IJT1078Session session)
-        {
-            DateTime curretDatetime = DateTime.Now;
-            if (TerminalPhoneNoSessions.TryGetValue(session.SessionID, out IJT1078Session cacheSession))
-            {
-                if (session.SessionID != cacheSession.SessionID)
-                {
-                    //从转发到直连的数据需要更新缓存
-                    session.ActiveTime = curretDatetime;
-                    TerminalPhoneNoSessions.TryUpdate(session.SessionID, session, cacheSession);
-                    //会话通知
-                    //todo: 会话通知
-
-                }
-                else
-                {
-                    cacheSession.ActiveTime = curretDatetime;
-                    TerminalPhoneNoSessions.TryUpdate(session.SessionID, cacheSession, cacheSession);
-                }
-            }
-            else
-            {
-                session.TerminalPhoneNo = session.SessionID;
-                if (TerminalPhoneNoSessions.TryAdd(session.SessionID, session))
-                {
-                    //会话通知
-                    //todo: 会话通知
-
+                    SessionNoticeService.SessionNoticeBlockingCollection.Add((JT1078GatewayConstants.SessionOnline, terminalPhoneNo, session.TransportProtocolType.ToString()));
                 }
             }
         }
@@ -133,7 +104,7 @@ namespace JT1078.Gateway.Sessions
                 currentSession = session;
             }
             //会话通知
-            //todo: 会话通知
+            SessionNoticeService.SessionNoticeBlockingCollection.Add((JT1078GatewayConstants.SessionOnline, terminalPhoneNo, currentSession.TransportProtocolType.ToString()));
             return currentSession;
         }
 
@@ -206,8 +177,7 @@ namespace JT1078.Gateway.Sessions
                     if (logger.IsEnabled(LogLevel.Information))
                         logger.LogInformation($"[Session Remove]:{terminalPhoneNo}-{tmpTerminalPhoneNo}");
                     //会话通知
-                    //todo: 会话通知 SessionOffline
-
+                    SessionNoticeService.SessionNoticeBlockingCollection.Add((JT1078GatewayConstants.SessionOffline, terminalPhoneNo, removeTerminalPhoneNoSessions.TransportProtocolType.ToString()));
                 }
             }
         }
@@ -225,7 +195,7 @@ namespace JT1078.Gateway.Sessions
                     }
                     var tmpTerminalPhoneNo = string.Join(",", terminalPhoneNos);
                     //会话通知
-                    //todo: 会话通知 SessionOffline tmpTerminalPhoneNo
+                    SessionNoticeService.SessionNoticeBlockingCollection.Add((JT1078GatewayConstants.SessionOffline, tmpTerminalPhoneNo, removeSession.TransportProtocolType.ToString()));
                     if (logger.IsEnabled(LogLevel.Information))
                         logger.LogInformation($"[Session Remove]:{tmpTerminalPhoneNo}");
                 }

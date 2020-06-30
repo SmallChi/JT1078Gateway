@@ -5,10 +5,10 @@
     <LangVersion>8.0</LangVersion>
     <Copyright>Copyright 2019.</Copyright>
     <Authors>SmallChi(Koike)</Authors>
-    <PackageId>JT1078.Gateway.Abstractions</PackageId>
-    <Product>JT1078.Gateway.Abstractions</Product>
-    <Description>基于JT1078Gateway的抽象库</Description>
-    <PackageReleaseNotes>基于JT1078Gateway的抽象库</PackageReleaseNotes>
+    <PackageId>JT1078.Gateway.InMemoryMQ</PackageId>
+    <Product>JT1078.Gateway.InMemoryMQ</Product>
+    <Description>基于JT1078Gateway实现的内存队列</Description>
+    <PackageReleaseNotes>基于JT1078Gateway实现的内存队列</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/SmallChi/JT1078Gateway</RepositoryUrl>
     <PackageProjectUrl>https://github.com/SmallChi/JT1078Gateway</PackageProjectUrl>
     <licenseUrl>https://github.com/SmallChi/JT1078Gateway/blob/master/LICENSE</licenseUrl>
@@ -19,17 +19,13 @@
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Version>1.0.0-preview2</Version>
   </PropertyGroup>
-  
+
   <ItemGroup>
-    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    <PackageReference Include="System.Threading.Channels" Version="4.7.1" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="JT1078" Version="1.0.2" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="3.1.5" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.5" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="3.1.5" />
-    <PackageReference Include="Microsoft.Extensions.Options" Version="3.1.5" />
-    <PackageReference Include="System.Text.Json" Version="4.7.2" />
+    <ProjectReference Include="..\JT1078.Gateway\JT1078.Gateway.csproj" />
   </ItemGroup>
+
 </Project>

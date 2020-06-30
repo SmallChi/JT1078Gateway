@@ -1,4 +1,4 @@
-﻿# JT1078.Gateway
+﻿# JT1078Gateway
 
 ## 前提条件
 

@@ -9,13 +9,12 @@ namespace JT1078.Gateway.Sessions
 {
     public class JT1078UdpSession: IJT1078Session
     {
-        public JT1078UdpSession(Socket socket, EndPoint sender)
+        public JT1078UdpSession(Socket socket)
         {
             ActiveTime = DateTime.Now;
             StartTime = DateTime.Now;
             SessionID = Guid.NewGuid().ToString("N");
             ReceiveTimeout = new CancellationTokenSource();
-            RemoteEndPoint = sender;
             Client = socket;
         }
 

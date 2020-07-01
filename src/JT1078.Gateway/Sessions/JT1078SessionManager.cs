@@ -97,8 +97,9 @@ namespace JT1078.Gateway.Sessions
             }
             else
             {
-                JT1078UdpSession session = new JT1078UdpSession(socket, remoteEndPoint);
+                JT1078UdpSession session = new JT1078UdpSession(socket);
                 session.TerminalPhoneNo = terminalPhoneNo;
+                session.RemoteEndPoint = remoteEndPoint;
                 Sessions.TryAdd(session.SessionID, session);
                 TerminalPhoneNoSessions.TryAdd(terminalPhoneNo, session);
                 currentSession = session;

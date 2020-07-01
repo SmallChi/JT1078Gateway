@@ -74,7 +74,7 @@ namespace JT1078.Gateway
         {
             SessionManager = jT1078SessionManager;
             jT1078UseType = JT1078UseType.Queue;
-            Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
+            Logger = loggerFactory.CreateLogger<JT1078UdpServer>();
             Configuration = jT1078ConfigurationAccessor.Value;
             this.jT1078MsgProducer = jT1078MsgProducer;
             InitServer();

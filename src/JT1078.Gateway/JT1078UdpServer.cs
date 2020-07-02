@@ -100,6 +100,10 @@ namespace JT1078.Gateway
                         var result = await server.ReceiveMessageFromAsync(segment, SocketFlags.None, server.LocalEndPoint);
                         ReaderBuffer(buffer.AsSpan(0, result.ReceivedBytes), server, result);
                     }
+                    catch (System.ObjectDisposedException ex)
+                    {
+
+                    }
                     catch (AggregateException ex)
                     {
                         Logger.LogError(ex, "Receive MessageFrom Async");
@@ -152,9 +156,16 @@ namespace JT1078.Gateway
         public Task StopAsync(CancellationToken cancellationToken)
         {
             Logger.LogInformation("JT1078 Udp Server Stop");
-            if (server?.Connected ?? false)
-                server.Shutdown(SocketShutdown.Both);
-            server?.Close();
+            try
+            {
+                if (server?.Connected ?? false)
+                    server.Shutdown(SocketShutdown.Both);
+                server?.Close();
+            }
+            catch (System.ObjectDisposedException ex)
+            {
+
+            }
             return Task.CompletedTask;
         }
     }

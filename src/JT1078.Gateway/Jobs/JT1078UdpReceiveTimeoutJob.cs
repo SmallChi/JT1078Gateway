@@ -47,8 +47,11 @@ namespace JT1078.Gateway.Jobs
                     {
                         SessionManager.RemoveBySessionId(item);
                     }
-                    Logger.LogInformation($"[Check Receive Timeout]");
-                    Logger.LogInformation($"[Session Online Count]:{SessionManager.UdpSessionCount}");
+                    if (Logger.IsEnabled(LogLevel.Information))
+                    {
+                        Logger.LogInformation($"[Check Receive Timeout]");
+                        Logger.LogInformation($"[Session Online Count]:{SessionManager.UdpSessionCount}");
+                    }
                 }
                 catch (Exception ex)
                 {

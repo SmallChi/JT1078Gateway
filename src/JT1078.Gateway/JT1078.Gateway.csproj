@@ -38,11 +38,6 @@
     <None Remove="Tcp\**" />
     <None Remove="Udp\**" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="Metadata\JT1078HttpSession.cs" />
-    <Compile Remove="Metadata\JT1078Request.cs" />
-    <Compile Remove="Metadata\JT1078Response.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="System.IO.Pipelines" Version="4.7.2" />

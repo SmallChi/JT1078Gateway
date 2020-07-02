@@ -133,6 +133,10 @@ namespace JT1078.Gateway
                     }
                     writer.Advance(bytesRead);
                 }
+                catch (System.ObjectDisposedException ex)
+                {
+
+                }
                 catch (OperationCanceledException ex)
                 {
                     Logger.LogError($"[Receive Timeout]:{session.Client.RemoteEndPoint}");

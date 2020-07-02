@@ -30,6 +30,7 @@ namespace JT1078.Gateway.TestNormalHosting
                     services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
                     //使用内存队列实现会话通知
                     services.AddJT1078Gateway(hostContext.Configuration)
+                                .AddHttp()
                                 .AddUdp()
                                 .AddTcp()
                                 .AddNormal()

@@ -39,13 +39,13 @@ namespace JT1078.Gateway
         public static IJT1078GatewayBuilder AddTcp(this IJT1078GatewayBuilder builder)
         {
             builder.JT1078Builder.Services.AddHostedService<JT1078TcpReceiveTimeoutJob>();
-            builder.JT1078Builder.Services.AddHostedService<JT1078UdpReceiveTimeoutJob>();
             builder.JT1078Builder.Services.AddHostedService<JT1078TcpServer>();
             return builder;
         }
 
         public static IJT1078GatewayBuilder AddUdp(this IJT1078GatewayBuilder builder)
         {
+            builder.JT1078Builder.Services.AddHostedService<JT1078UdpReceiveTimeoutJob>();
             builder.JT1078Builder.Services.AddHostedService<JT1078UdpServer>();
             return builder;
         }
@@ -64,8 +64,6 @@ namespace JT1078.Gateway
 
         public static IJT1078QueueGatewayBuilder AddQueue(this IJT1078GatewayBuilder builder)
         {
-            builder.JT1078Builder.Services.AddHostedService<JT1078TcpReceiveTimeoutJob>();
-            builder.JT1078Builder.Services.AddHostedService<JT1078UdpReceiveTimeoutJob>();
             return new JT1078QueueGatewayBuilderDefault(builder.JT1078Builder);
         }
 

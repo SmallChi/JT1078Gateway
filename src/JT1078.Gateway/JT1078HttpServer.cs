@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.WebSockets;
+using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -57,9 +58,7 @@ namespace JT1078.Gateway
                     {
                         if (authorization.Authorization(context,out var principal))
                         {
-                            //new JT1078HttpContext(context, principal);
-                            //todo:session manager
-                            await ProcessRequestAsync(context);
+                            await ProcessRequestAsync(context, principal);
                         }
                         else
                         {
@@ -76,7 +75,7 @@ namespace JT1078.Gateway
             return Task.CompletedTask;
         }
 
-        private async ValueTask ProcessRequestAsync(HttpListenerContext context)
+        private async ValueTask ProcessRequestAsync(HttpListenerContext context, IPrincipal principal)
         {
             if(context.Request.RawUrl.StartsWith("/favicon.ico"))
             {
@@ -84,26 +83,36 @@ namespace JT1078.Gateway
             }
             if (Logger.IsEnabled(LogLevel.Trace))
             {
-                Logger.LogTrace($"[http RequestTraceIdentifier]:{context.Request.RequestTraceIdentifier.ToString()}");
+                Logger.LogTrace($"[http RequestTraceIdentifier]:{context.Request.RequestTraceIdentifier.ToString()}-{context.Request.RemoteEndPoint.ToString()}");
             }
+            string sim = context.Request.QueryString.Get("sim");
+            string channel = context.Request.QueryString.Get("channel");
+            if(string.IsNullOrEmpty(sim) || string.IsNullOrEmpty(channel))
+            {
+                await Http400(context);
+                return;
+            }
+            int.TryParse(channel, out int channelNo);
             if (context.Request.IsWebSocketRequest)
             {
                 HttpListenerWebSocketContext wsContext = await context.AcceptWebSocketAsync(null);
-                //todo:websocket context 管理
+                var jT1078HttpContext = new JT1078HttpContext(context, wsContext,principal);
+                jT1078HttpContext.Sim = sim;
+                jT1078HttpContext.ChannelNo = channelNo;
+                //todo: add session manager
                 await wsContext.WebSocket.SendAsync(Encoding.UTF8.GetBytes("hello,jt1078"), WebSocketMessageType.Text, true, CancellationToken.None);
                 await Task.Factory.StartNew(async(state) => 
                 {
-           
                     //https://www.bejson.com/httputil/websocket/
-                    //ws://127.0.0.1:15555?token=22
-                    var websocketContext = state as HttpListenerWebSocketContext;
-                    while(websocketContext.WebSocket.State == WebSocketState.Open || 
-                          websocketContext.WebSocket.State == WebSocketState.Connecting)
+                    //ws://127.0.0.1:15555?token=22&sim=1221&channel=1
+                    var websocketContext = state as JT1078HttpContext;
+                    while(websocketContext.WebSocketContext.WebSocket.State == WebSocketState.Open || 
+                          websocketContext.WebSocketContext.WebSocket.State == WebSocketState.Connecting)
                     {
                         var buffer = ArrayPool<byte>.Shared.Rent(256);
                         try
                         {
-                            WebSocketReceiveResult receiveResult = await websocketContext.WebSocket.ReceiveAsync(buffer, CancellationToken.None);
+                            WebSocketReceiveResult receiveResult = await websocketContext.WebSocketContext.WebSocket.ReceiveAsync(buffer, CancellationToken.None);
                             if (receiveResult.EndOfMessage)
                             {
                                 if (receiveResult.Count > 0)
@@ -113,7 +122,7 @@ namespace JT1078.Gateway
                                     {
                                         Logger.LogTrace($"[ws receive]:{Encoding.UTF8.GetString(data)}");
                                     }
-                                    await websocketContext.WebSocket.SendAsync(data, WebSocketMessageType.Text, true, CancellationToken.None);
+                                    await websocketContext.WebSocketContext.WebSocket.SendAsync(data, WebSocketMessageType.Text, true, CancellationToken.None);
                                 }
                             }
                         }
@@ -124,19 +133,24 @@ namespace JT1078.Gateway
                     }
                     if (Logger.IsEnabled(LogLevel.Trace))
                     {
-                        Logger.LogTrace($"[ws close]:{wsContext}");
+                        Logger.LogTrace($"[ws close]:{websocketContext}");
                     }
                     //todo:session close notice
-                    await wsContext.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "normal", CancellationToken.None);
-                }, wsContext);
+                    await websocketContext.WebSocketContext.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "normal", CancellationToken.None);
+                }, jT1078HttpContext);
             }
             else
             {
+                var jT1078HttpContext = new JT1078HttpContext(context,principal);
+                jT1078HttpContext.Sim = sim;
+                jT1078HttpContext.ChannelNo = channelNo;
+
+                //todo:add session manager
+
                 //todo:set http chunk
+
                 //todo:session close notice
-                //var body = await new StreamReader(context.Request.InputStream).ReadToEndAsync();
-                var options = context.Request.QueryString;
-                //var keys = options.AllKeys;
+
                 byte[] b = Encoding.UTF8.GetBytes("ack");
                 context.Response.StatusCode = 200;
                 context.Response.KeepAlive = true;
@@ -157,6 +171,17 @@ namespace JT1078.Gateway
             context.Response.Close();
         }
 
+        private async ValueTask Http400(HttpListenerContext context)
+        {
+            byte[] b = Encoding.UTF8.GetBytes($"sim and channel parameter required.");
+            context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            context.Response.KeepAlive = false;
+            context.Response.ContentLength64 = b.Length;
+            var output = context.Response.OutputStream;
+            await output.WriteAsync(b, 0, b.Length);
+            context.Response.Close();
+        }
+        
         private void Http404(HttpListenerContext context)
         {
             context.Response.StatusCode = (int)HttpStatusCode.NotFound;

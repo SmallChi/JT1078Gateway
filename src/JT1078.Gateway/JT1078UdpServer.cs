@@ -127,6 +127,7 @@ namespace JT1078.Gateway
             try
             {
                 var package = JT1078Serializer.Deserialize(buffer);
+                package.SIM = package.SIM.TrimStart('0');
                 if (Logger.IsEnabled(LogLevel.Trace)) Logger.LogTrace($"[Accept Hex {receiveMessageFromResult.RemoteEndPoint}]:{buffer.ToArray().ToHexString()}");
                 var session = SessionManager.TryLink(package.SIM, socket, receiveMessageFromResult.RemoteEndPoint);
                 if (Logger.IsEnabled(LogLevel.Information))

@@ -13,6 +13,11 @@ namespace JT1078.Gateway.Configurations
         public int SoBacklog { get; set; } = 8192;
         public int MiniNumBufferSize { get; set; } = 8096;
         /// <summary>
+        /// http写超时 
+        /// 默认5s检查一次
+        /// </summary>
+        public int HttpWriterIdleTimeSeconds { get; set; } = 5;
+        /// <summary>
         /// Tcp读超时 
         /// 默认10分钟检查一次
         /// </summary>

@@ -53,6 +53,8 @@ namespace JT1078.Gateway
         public static IJT1078GatewayBuilder AddHttp(this IJT1078GatewayBuilder builder)
         {
             builder.JT1078Builder.Services.AddSingleton<IJT1078Authorization, JT1078AuthorizationDefault>();
+            builder.JT1078Builder.Services.AddSingleton<JT1078HttpSessionManager>();
+            builder.JT1078Builder.Services.AddHostedService<JT1078HttpWriterTimeoutJob>();
             builder.JT1078Builder.Services.AddHostedService<JT1078HttpServer>();
             return builder;
         }

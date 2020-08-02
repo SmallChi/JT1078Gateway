@@ -14,9 +14,13 @@ namespace JT1078.Gateway.Configurations
         public int MiniNumBufferSize { get; set; } = 8096;
         /// <summary>
         /// http写超时 
-        /// 默认5s检查一次
         /// </summary>
-        public int HttpWriterIdleTimeSeconds { get; set; } = 5;
+        public int HttpWriterIdleTimeSeconds { get; set; } = 60;
+        /// <summary>
+        /// http写超时 
+        /// 默认60s检查一次
+        /// </summary>
+        public int HttpWriterTimeoutCheckTimeSeconds { get; set; } = 60;
         /// <summary>
         /// Tcp读超时 
         /// 默认10分钟检查一次

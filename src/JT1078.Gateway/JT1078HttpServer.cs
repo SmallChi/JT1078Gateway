@@ -1,6 +1,7 @@
 ﻿using JT1078.Gateway.Abstractions;
 using JT1078.Gateway.Configurations;
 using JT1078.Gateway.Metadata;
+using JT1078.Gateway.Sessions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -27,14 +28,18 @@ namespace JT1078.Gateway
 
         private HttpListener listener;
 
+        private JT1078HttpSessionManager SessionManager;
+
         public JT1078HttpServer(
             IOptions<JT1078Configuration> jT1078ConfigurationAccessor,
             IJT1078Authorization authorization,
+            JT1078HttpSessionManager sessionManager,
             ILoggerFactory loggerFactory)
         {
             Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
             Configuration = jT1078ConfigurationAccessor.Value;
             this.authorization = authorization;
+            this.SessionManager = sessionManager;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -46,8 +51,15 @@ namespace JT1078.Gateway
             }
             listener = new HttpListener();
             listener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
-            listener.Prefixes.Add($"http://*:{Configuration.HttpPort}/");
-            listener.Start();
+            try
+            {
+                listener.Prefixes.Add($"http://*:{Configuration.HttpPort}/");
+                listener.Start();
+            }
+            catch (System.Net.HttpListenerException ex)
+            {
+                Logger.LogWarning(ex, $"{ex.Message}:使用cmd命令[netsh http add urlacl url=http://*:{Configuration.HttpPort}/ user=Everyone]");
+            }
             Logger.LogInformation($"JT1078 Http Server start at {IPAddress.Any}:{Configuration.HttpPort}.");
             Task.Factory.StartNew(async() => 
             {
@@ -81,6 +93,7 @@ namespace JT1078.Gateway
             {
                 Http404(context);
             }
+            //todo:.m3u8 .ts
             if (Logger.IsEnabled(LogLevel.Trace))
             {
                 Logger.LogTrace($"[http RequestTraceIdentifier]:{context.Request.RequestTraceIdentifier.ToString()}-{context.Request.RemoteEndPoint.ToString()}");
@@ -99,7 +112,7 @@ namespace JT1078.Gateway
                 var jT1078HttpContext = new JT1078HttpContext(context, wsContext,principal);
                 jT1078HttpContext.Sim = sim;
                 jT1078HttpContext.ChannelNo = channelNo;
-                //todo: add session manager
+                SessionManager.TryAdd(jT1078HttpContext);
                 await wsContext.WebSocket.SendAsync(Encoding.UTF8.GetBytes("hello,jt1078"), WebSocketMessageType.Text, true, CancellationToken.None);
                 await Task.Factory.StartNew(async(state) => 
                 {
@@ -135,8 +148,12 @@ namespace JT1078.Gateway
                     {
                         Logger.LogTrace($"[ws close]:{websocketContext}");
                     }
-                    //todo:session close notice
-                    await websocketContext.WebSocketContext.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "normal", CancellationToken.None);
+                    try
+                    {
+                        await websocketContext.WebSocketContext.WebSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "normal", CancellationToken.None);
+                    }
+                    catch {}
+                    SessionManager.TryRemove(websocketContext.SessionId);
                 }, jT1078HttpContext);
             }
             else
@@ -144,19 +161,7 @@ namespace JT1078.Gateway
                 var jT1078HttpContext = new JT1078HttpContext(context,principal);
                 jT1078HttpContext.Sim = sim;
                 jT1078HttpContext.ChannelNo = channelNo;
-
-                //todo:add session manager
-
-                //todo:set http chunk
-
-                //todo:session close notice
-
-                byte[] b = Encoding.UTF8.GetBytes("ack");
-                context.Response.StatusCode = 200;
-                context.Response.KeepAlive = true;
-                context.Response.ContentLength64 = b.Length;
-                await context.Response.OutputStream.WriteAsync(b, 0, b.Length);
-                context.Response.Close();
+                SessionManager.TryAdd(jT1078HttpContext);
             }
         }
 
@@ -204,9 +209,14 @@ namespace JT1078.Gateway
         {
             try
             {
+                SessionManager.TryRemoveAll();
                 listener.Stop();
             }
             catch (System.ObjectDisposedException ex)
+            {
+
+            }
+            catch (Exception ex)
             {
 
             }

@@ -37,9 +37,13 @@ namespace JT1078.Gateway.Jobs
                 {
                     foreach (var item in SessionManager.GetAll())
                     {
-                        if (item.ActiveTime.AddSeconds(Configuration.CurrentValue.HttpWriterIdleTimeSeconds) < DateTime.Now)
+                        //过滤掉websocket的方式，无论是客户端主动断开还是关闭浏览器都会有断开通知的情况，所以就只需要判断http的写超时
+                        if (!item.IsWebSocket)  
                         {
-                            SessionManager.TryRemove(item.SessionId);
+                            if (item.ActiveTime.AddSeconds(Configuration.CurrentValue.HttpWriterIdleTimeSeconds) < DateTime.Now)
+                            {
+                                SessionManager.TryRemove(item.SessionId);
+                            }
                         }
                     }
                     if (Logger.IsEnabled(LogLevel.Information))

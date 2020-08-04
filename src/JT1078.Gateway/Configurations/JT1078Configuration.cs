@@ -18,9 +18,9 @@ namespace JT1078.Gateway.Configurations
         public int HttpWriterIdleTimeSeconds { get; set; } = 60;
         /// <summary>
         /// http写超时 
-        /// 默认60s检查一次
+        /// 默认30s检查一次
         /// </summary>
-        public int HttpWriterTimeoutCheckTimeSeconds { get; set; } = 60;
+        public int HttpWriterTimeoutCheckTimeSeconds { get; set; } = 30;
         /// <summary>
         /// Tcp读超时 
         /// 默认10分钟检查一次

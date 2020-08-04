@@ -20,19 +20,16 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Codecs\**" />
-    <Compile Remove="Extensions\**" />
     <Compile Remove="Http\**" />
     <Compile Remove="Session\**" />
     <Compile Remove="Tcp\**" />
     <Compile Remove="Udp\**" />
     <EmbeddedResource Remove="Codecs\**" />
-    <EmbeddedResource Remove="Extensions\**" />
     <EmbeddedResource Remove="Http\**" />
     <EmbeddedResource Remove="Session\**" />
     <EmbeddedResource Remove="Tcp\**" />
     <EmbeddedResource Remove="Udp\**" />
     <None Remove="Codecs\**" />
-    <None Remove="Extensions\**" />
     <None Remove="Http\**" />
     <None Remove="Session\**" />
     <None Remove="Tcp\**" />

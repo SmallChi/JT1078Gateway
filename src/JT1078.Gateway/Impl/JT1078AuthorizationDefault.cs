@@ -20,6 +20,12 @@ namespace JT1078.Gateway.Impl
             }
             else
             {
+                token = context.Request.Headers.Get("token");
+                if (!string.IsNullOrEmpty(token))
+                {
+                    principal = new ClaimsPrincipal(new GenericIdentity(token));
+                    return true;
+                }
                 principal = null;
                 return false;
             }

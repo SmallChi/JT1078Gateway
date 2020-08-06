@@ -22,24 +22,24 @@ namespace JT1078.Gateway.Metadata
                 return Context.Request.IsWebSocketRequest;
             }
         }
-        public DateTime ActiveTime { get; set; }
         public DateTime StartTime { get; set; }
+        public bool SendChunked { get; set; }
         public JT1078HttpContext(HttpListenerContext context, IPrincipal user)
         {
             Context = context;
             User = user;
-            ActiveTime = DateTime.Now;
             StartTime = DateTime.Now;
             SessionId = Guid.NewGuid().ToString("N");
+            SendChunked = false;
         }
         public JT1078HttpContext(HttpListenerContext context, HttpListenerWebSocketContext webSocketContext, IPrincipal user)
         {
             Context = context;
             WebSocketContext = webSocketContext;
             User = user;
-            ActiveTime = DateTime.Now;
             StartTime = DateTime.Now;
             SessionId = Guid.NewGuid().ToString("N");
+            SendChunked = false;
         }
     }
 }

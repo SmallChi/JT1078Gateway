@@ -19,7 +19,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
         {
             PackageConsumer.OnMessage((Message) => 
             {
-            
+
             });
             return Task.CompletedTask;
         }

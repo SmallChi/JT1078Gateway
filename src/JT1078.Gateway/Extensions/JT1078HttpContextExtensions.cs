@@ -51,6 +51,19 @@ namespace JT1078.Gateway.Extensions
             context.Response.Close();
         }
 
+        public static async ValueTask HttpSendFirstChunked(this JT1078HttpContext context, ReadOnlyMemory<byte> buffer)
+        {
+            context.Context.Response.StatusCode = (int)HttpStatusCode.OK;
+            context.Context.Response.SendChunked = true;
+            await context.Context.Response.OutputStream.WriteAsync(buffer);
+        }
+
+        public static async ValueTask HttpSendChunked(this JT1078HttpContext context, ReadOnlyMemory<byte> buffer)
+        {
+            context.Context.Response.StatusCode = (int)HttpStatusCode.OK;
+            await context.Context.Response.OutputStream.WriteAsync(buffer);
+        }
+
         public static async ValueTask HttpClose(this JT1078HttpContext context)
         {
             byte[] b = Encoding.UTF8.GetBytes("close");
@@ -75,6 +88,13 @@ namespace JT1078.Gateway.Extensions
         public static async ValueTask WebSocketSendBinaryAsync(this JT1078HttpContext context, ReadOnlyMemory<byte> buffer)
         {
             await context.WebSocketContext.WebSocket.SendAsync(buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
+        }
+
+        private static ReadOnlyMemory<byte> Hello = Encoding.UTF8.GetBytes("hello,jt1078");
+
+        public static async ValueTask WebSocketSendHelloAsync(this JT1078HttpContext context)
+        {
+            await context.WebSocketContext.WebSocket.SendAsync(Hello, WebSocketMessageType.Text, true, CancellationToken.None);
         }
     }
 }

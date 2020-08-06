@@ -1,5 +1,6 @@
 ﻿using JT1078.Gateway.Extensions;
 using JT1078.Gateway.Metadata;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -15,10 +16,11 @@ namespace JT1078.Gateway.Sessions
     public class JT1078HttpSessionManager
     {
         public ConcurrentDictionary<string, JT1078HttpContext> Sessions { get; }
-
-        public JT1078HttpSessionManager()
+        private ILogger Logger;
+        public JT1078HttpSessionManager(ILoggerFactory loggerFactory)
         {
             Sessions = new ConcurrentDictionary<string, JT1078HttpContext>();
+            Logger = loggerFactory.CreateLogger<JT1078HttpSessionManager>();
         }
 
         public bool TryAdd(JT1078HttpContext  httpContext)
@@ -53,16 +55,163 @@ namespace JT1078.Gateway.Sessions
             }
         }
 
-        public void SendHttpChunk(byte[] data)
+        private void remove(string sessionId)
         {
-            //todo:set http chunk
-            //todo:session close notice
-            //byte[] b = Encoding.UTF8.GetBytes("ack");
-            //context.Response.StatusCode = 200;
-            //context.Response.KeepAlive = true;
-            //context.Response.ContentLength64 = b.Length;
-            //await context.Response.OutputStream.WriteAsync(b, 0, b.Length);
-            //context.Response.Close();
+            if (Sessions.TryRemove(sessionId, out JT1078HttpContext session))
+            {
+                //todo:session close notice
+            }
+        }
+
+        /// <summary>
+        /// 发送音视频数据
+        /// </summary>
+        /// <param name="sim"></param>
+        /// <param name="channelNo"></param>
+        /// <param name="data"></param>
+        public void SendAVData(string sim,int channelNo,byte[] data)
+        {
+            var contexts = Sessions.Select(s => s.Value).Where(w => w.Sim == sim && w.ChannelNo == channelNo).ToList();
+            ParallelLoopResult parallelLoopResult= Parallel.ForEach(contexts, async(context) => 
+            {
+                if (context.IsWebSocket)
+                {
+                    try
+                    {
+                        await context.WebSocketSendBinaryAsync(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (Logger.IsEnabled(LogLevel.Information))
+                        {
+                            Logger.LogInformation($"[ws close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
+                        }
+                        remove(context.SessionId);
+                    }
+                }
+                else
+                {
+                    if (!context.SendChunked)
+                    {
+                        context.SendChunked = true;
+                        Sessions.TryUpdate(context.SessionId, context, context);
+                        try
+                        {
+                            await context.HttpSendFirstChunked(data);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (Logger.IsEnabled(LogLevel.Information))
+                            {
+                                Logger.LogInformation($"[http close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
+                            }
+                            remove(context.SessionId);
+                        }
+                    }
+                    else
+                    {
+                        try
+                        {
+                            await context.HttpSendChunked(data);
+                        }
+                        catch (Exception ex)
+                        {
+                            if (Logger.IsEnabled(LogLevel.Information))
+                            {
+                                Logger.LogInformation($"[http close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
+                            }
+                            remove(context.SessionId);
+                        }
+                    }
+                }
+            });
+            if (parallelLoopResult.IsCompleted)
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// 发送音视频数据到websocket
+        /// </summary>
+        /// <param name="sim"></param>
+        /// <param name="channelNo"></param>
+        /// <param name="data"></param>
+        public void SendAVData2WebSocket(string sim, int channelNo, byte[] data)
+        {
+            var contexts = Sessions.Select(s => s.Value).Where(w => w.Sim == sim && w.ChannelNo == channelNo && w.IsWebSocket).ToList();
+            ParallelLoopResult parallelLoopResult = Parallel.ForEach(contexts, async (context) =>
+            {
+                if (context.IsWebSocket)
+                {
+                    try
+                    {
+                        await context.WebSocketSendBinaryAsync(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (Logger.IsEnabled(LogLevel.Information))
+                        {
+                            Logger.LogInformation($"[ws close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
+                        }
+                        remove(context.SessionId);
+                    }
+                }
+            });
+            if (parallelLoopResult.IsCompleted)
+            {
+
+            }
+        }
+
+        /// <summary>
+        /// 发送音视频数据到Http Chunked中
+        /// </summary>
+        /// <param name="sim"></param>
+        /// <param name="channelNo"></param>
+        /// <param name="data"></param>
+        public void SendAVData2HttpChunked(string sim, int channelNo, byte[] data)
+        {
+            var contexts = Sessions.Select(s => s.Value).Where(w => w.Sim == sim && w.ChannelNo == channelNo && !w.IsWebSocket).ToList();
+            ParallelLoopResult parallelLoopResult = Parallel.ForEach(contexts, async (context) =>
+            {
+                if (!context.SendChunked)
+                {
+                    context.SendChunked = true;
+                    Sessions.TryUpdate(context.SessionId, context, context);
+                    try
+                    {
+                        await context.HttpSendFirstChunked(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (Logger.IsEnabled(LogLevel.Information))
+                        {
+                            Logger.LogInformation($"[http close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
+                        }
+                        remove(context.SessionId);
+                    }
+                }
+                else
+                {
+                    try
+                    {
+                        await context.HttpSendChunked(data);
+                    }
+                    catch (Exception ex)
+                    {
+                        if (Logger.IsEnabled(LogLevel.Information))
+                        {
+                            Logger.LogInformation($"[http close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
+                        }
+                        remove(context.SessionId);
+                    }
+                }             
+            });
+            if (parallelLoopResult.IsCompleted)
+            {
+
+            }
         }
 
         public int SessionCount 

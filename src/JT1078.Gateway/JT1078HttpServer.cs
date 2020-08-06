@@ -109,23 +109,24 @@ namespace JT1078.Gateway
             int.TryParse(channel, out int channelNo);
             if (context.Request.IsWebSocketRequest)
             {
-                HttpListenerWebSocketContext wsContext = await context.AcceptWebSocketAsync(null);
+                HttpListenerWebSocketContext wsContext = await context.AcceptWebSocketAsync(null, keepAliveInterval:TimeSpan.FromSeconds(5));
                 var jT1078HttpContext = new JT1078HttpContext(context, wsContext,principal);
                 jT1078HttpContext.Sim = sim;
                 jT1078HttpContext.ChannelNo = channelNo;
                 SessionManager.TryAdd(jT1078HttpContext);
-                await wsContext.WebSocket.SendAsync(Encoding.UTF8.GetBytes("hello,jt1078"), WebSocketMessageType.Text, true, CancellationToken.None);
-                await Task.Factory.StartNew(async(state) => 
+                await jT1078HttpContext.WebSocketSendHelloAsync();
+                await Task.Factory.StartNew(async(state) =>
                 {
                     //https://www.bejson.com/httputil/websocket/
                     //ws://localhost:15555?token=22&sim=1221&channel=1
                     var websocketContext = state as JT1078HttpContext;
-                    while(websocketContext.WebSocketContext.WebSocket.State == WebSocketState.Open || 
-                          websocketContext.WebSocketContext.WebSocket.State == WebSocketState.Connecting)
+                    while (websocketContext.WebSocketContext.WebSocket.State == WebSocketState.Open ||
+                            websocketContext.WebSocketContext.WebSocket.State == WebSocketState.Connecting)
                     {
                         var buffer = ArrayPool<byte>.Shared.Rent(256);
                         try
                         {
+                            //客户端主动断开需要有个线程去接收通知,不然会客户端会卡死直到超时
                             WebSocketReceiveResult receiveResult = await websocketContext.WebSocketContext.WebSocket.ReceiveAsync(buffer, CancellationToken.None);
                             if (receiveResult.EndOfMessage)
                             {
@@ -145,9 +146,9 @@ namespace JT1078.Gateway
                             ArrayPool<byte>.Shared.Return(buffer);
                         }
                     }
-                    if (Logger.IsEnabled(LogLevel.Trace))
+                    if (Logger.IsEnabled(LogLevel.Information))
                     {
-                        Logger.LogTrace($"[ws close]:{websocketContext}");
+                        Logger.LogInformation($"[ws close]:{websocketContext.SessionId}-{websocketContext.Sim}-{websocketContext.ChannelNo}-{websocketContext.StartTime:yyyyMMddhhmmss}");
                     }
                     SessionManager.TryRemove(websocketContext.SessionId);
                 }, jT1078HttpContext);

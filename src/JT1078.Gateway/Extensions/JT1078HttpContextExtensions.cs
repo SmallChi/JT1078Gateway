@@ -19,6 +19,7 @@ namespace JT1078.Gateway.Extensions
             context.Response.ContentLength64 = b.Length;
             var output = context.Response.OutputStream;
             await output.WriteAsync(b, 0, b.Length);
+            context.Response.OutputStream.Close();
             context.Response.Close();
         }
 
@@ -30,6 +31,7 @@ namespace JT1078.Gateway.Extensions
             context.Response.ContentLength64 = b.Length;
             var output = context.Response.OutputStream;
             await output.WriteAsync(b, 0, b.Length);
+            context.Response.OutputStream.Close();
             context.Response.Close();
         }
 
@@ -37,6 +39,7 @@ namespace JT1078.Gateway.Extensions
         {
             context.Response.StatusCode = (int)HttpStatusCode.NotFound;
             context.Response.KeepAlive = false;
+            context.Response.OutputStream.Close();
             context.Response.Close();
         }
 
@@ -48,6 +51,7 @@ namespace JT1078.Gateway.Extensions
             context.Response.ContentLength64 = b.Length;
             var output = context.Response.OutputStream;
             await output.WriteAsync(b, 0, b.Length);
+            context.Response.OutputStream.Close();
             context.Response.Close();
         }
 
@@ -72,6 +76,7 @@ namespace JT1078.Gateway.Extensions
             context.Context.Response.ContentLength64 = b.Length;
             var output = context.Context.Response.OutputStream;
             await output.WriteAsync(b, 0, b.Length);
+            context.Context.Response.OutputStream.Close();
             context.Context.Response.Close();
         }
 

@@ -88,13 +88,65 @@ namespace JT1078.Gateway
             return Task.CompletedTask;
         }
 
+        private const string m3u8Mime = "application/x-mpegURL";
+        private const string tsMime = "video/MP2T";
+
         private async ValueTask ProcessRequestAsync(HttpListenerContext context, IPrincipal principal)
         {
             if(context.Request.RawUrl.StartsWith("/favicon.ico"))
             {
                 context.Http404();
+                return;
             }
-            //todo:.m3u8 .ts
+            var queryStringIndex = context.Request.RawUrl.IndexOf("?");
+            string url = "";
+            if (queryStringIndex > 0)
+            {
+                url = context.Request.RawUrl.Substring(1, queryStringIndex-1);
+            }
+            else
+            {
+                url = context.Request.RawUrl;
+            }
+            if (url.EndsWith(".m3u8") || url.EndsWith(".ts"))
+            {
+                string filename = Path.GetFileName(url);
+                string filepath = Path.Combine(Configuration.HlsRootDirectory, Path.GetFileNameWithoutExtension(filename), filename);
+                if (!File.Exists(filepath))
+                {
+                    context.Http404();
+                    return;
+                }
+                try
+                {
+                    using (FileStream sr = new FileStream(filepath, FileMode.Open))
+                    {
+                        context.Response.ContentLength64 = sr.Length;
+                        await sr.CopyToAsync(context.Response.OutputStream);
+                    }
+                    string ext = Path.GetExtension(filename);
+                    if (ext == ".m3u8")
+                    {
+                        context.Response.ContentType = m3u8Mime;
+                    }
+                    else if (ext == ".ts")
+                    {
+                        context.Response.ContentType = tsMime;
+                    }
+                    context.Response.StatusCode = (int)HttpStatusCode.OK;
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"{context.Request.RawUrl}");
+                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+                }
+                finally
+                {
+                    context.Response.OutputStream.Close();
+                    context.Response.Close();
+                }
+                return;
+            }
             if (Logger.IsEnabled(LogLevel.Trace))
             {
                 Logger.LogTrace($"[http RequestTraceIdentifier]:{context.Request.RequestTraceIdentifier.ToString()}-{context.Request.RemoteEndPoint.ToString()}");

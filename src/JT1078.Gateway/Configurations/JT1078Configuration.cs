@@ -29,6 +29,10 @@ namespace JT1078.Gateway.Configurations
         /// Udp 60s检查一次
         /// </summary>
         public int UdpReceiveTimeoutCheckTimeSeconds { get; set; } = 60;
+        /// <summary>
+        /// Hls根目录
+        /// </summary>
+        public string HlsRootDirectory { get; set; } = "wwwroot";
 
         public JT1078Configuration Value => this;
     }

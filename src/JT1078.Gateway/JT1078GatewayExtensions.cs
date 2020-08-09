@@ -7,8 +7,8 @@ using JT1078.Gateway.Sessions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 using System;
+using System.Net.Http;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("JT1078.Gateway.Test")]
@@ -55,6 +55,22 @@ namespace JT1078.Gateway
             builder.JT1078Builder.Services.AddSingleton<IJT1078Authorization, JT1078AuthorizationDefault>();
             builder.JT1078Builder.Services.AddSingleton<JT1078HttpSessionManager>();
             builder.JT1078Builder.Services.AddHostedService<JT1078HttpServer>();
+            return builder;
+        }
+
+        public static IJT1078GatewayBuilder AddHttp<TIJT1078Authorization>(this IJT1078GatewayBuilder builder)
+            where TIJT1078Authorization: IJT1078Authorization
+        {
+            builder.JT1078Builder.Services.AddSingleton(typeof(IJT1078Authorization), typeof(TIJT1078Authorization));
+            builder.JT1078Builder.Services.AddSingleton<JT1078HttpSessionManager>();
+            builder.JT1078Builder.Services.AddHostedService<JT1078HttpServer>();
+            return builder;
+        }
+
+        public static IJT1078GatewayBuilder AddCoordinatorHttpClient(this IJT1078GatewayBuilder builder)
+        {
+            builder.JT1078Builder.Services.AddSingleton<JT1078CoordinatorHttpClient>();
+            builder.JT1078Builder.Services.AddHostedService<JT1078HeartbeatJob>();
             return builder;
         }
 

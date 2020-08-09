@@ -1,0 +1,13 @@
+﻿{
+  "profiles": {
+    "JT1078.Gateway.Coordinator": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "commandLineArgs": "Development",
+      "applicationUrl": "http://localhost:1080",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

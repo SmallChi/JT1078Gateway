@@ -33,7 +33,17 @@ namespace JT1078.Gateway.Configurations
         /// Hls根目录
         /// </summary>
         public string HlsRootDirectory { get; set; } = "wwwroot";
-
+        /// <summary>
+        /// 协调器发送心跳时间
+        /// 默认60s发送一次
+        /// </summary>
+        public int CoordinatorHeartbeatTimeSeconds { get; set; } = 60;
+        /// <summary>
+        /// 协调器Coordinator主机
+        /// http://localhost/
+        /// http://127.0.0.1/
+        /// </summary>
+        public string CoordinatorUri { get; set; } = "http://localhost:1080/";
         public JT1078Configuration Value => this;
     }
 }

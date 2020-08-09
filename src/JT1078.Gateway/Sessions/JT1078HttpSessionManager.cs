@@ -222,6 +222,22 @@ namespace JT1078.Gateway.Sessions
             } 
         }
 
+        public int HttpSessionCount
+        {
+            get
+            {
+                return Sessions.Count(c=>!c.Value.IsWebSocket);
+            }
+        }
+
+        public int WebSocketSessionCount
+        {
+            get
+            {
+                return Sessions.Count(c => c.Value.IsWebSocket);
+            }
+        }
+
         public List<JT1078HttpContext> GetAll()
         {
             return Sessions.Select(s => s.Value).ToList();

@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.Gateway.InMemoryMQ",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.Gateway.TestNormalHosting", "JT1078.Gateway.Tests\JT1078.Gateway.TestNormalHosting\JT1078.Gateway.TestNormalHosting.csproj", "{6E2DAA64-E2A1-4459-BE61-E807B4EF2CCE}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.Gateway.Coordinator", "JT1078.Gateway.Coordinator\JT1078.Gateway.Coordinator.csproj", "{B0A24D3A-FDA3-4DFE-9C31-032C7C22F303}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{6E2DAA64-E2A1-4459-BE61-E807B4EF2CCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6E2DAA64-E2A1-4459-BE61-E807B4EF2CCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6E2DAA64-E2A1-4459-BE61-E807B4EF2CCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0A24D3A-FDA3-4DFE-9C31-032C7C22F303}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0A24D3A-FDA3-4DFE-9C31-032C7C22F303}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0A24D3A-FDA3-4DFE-9C31-032C7C22F303}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0A24D3A-FDA3-4DFE-9C31-032C7C22F303}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

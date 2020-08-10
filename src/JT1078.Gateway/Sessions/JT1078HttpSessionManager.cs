@@ -48,18 +48,40 @@ namespace JT1078.Gateway.Sessions
                 {
 
                 }
-                finally
-                {
-                    //todo:session close notice
-                }
             }
+        }
+
+        public async void TryRemoveBySim(string sim)
+        {
+            var keys=Sessions.Where(f => f.Value.Sim == sim).Select(s => s.Key);
+            foreach(var key in keys)
+            {
+                if (Sessions.TryRemove(key, out JT1078HttpContext session))
+                {
+                    try
+                    {
+                        if (session.IsWebSocket)
+                        {
+                            await session.WebSocketClose("close");
+                        }
+                        else
+                        {
+
+                            await session.HttpClose();
+                        }
+                    }
+                    catch (Exception)
+                    {
+
+                    }
+                }
+            }  
         }
 
         private void remove(string sessionId)
         {
             if (Sessions.TryRemove(sessionId, out JT1078HttpContext session))
             {
-                //todo:session close notice
             }
         }
 

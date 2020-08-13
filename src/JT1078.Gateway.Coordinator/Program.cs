@@ -20,7 +20,18 @@ namespace JT1078.Gateway.Coordinator
                 .UseEnvironment(args[0])
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.Configure(app =>
+                    webBuilder.ConfigureServices(services =>
+                    {
+                        services.AddCors(options =>
+                             options.AddPolicy("any", builder =>
+                                 builder.AllowAnyOrigin()
+                                        .AllowAnyMethod()
+                                        .AllowAnyHeader()
+                                        .SetIsOriginAllowed(o=>true)));
+                        services.AddMemoryCache();
+                        services.AddControllers();
+                        services.AddMvc();
+                    }).Configure(app =>
                     {
                         app.UseRouting();
                         app.UseCors("any");
@@ -32,19 +43,6 @@ namespace JT1078.Gateway.Coordinator
                         {
                             ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost
                         });
-                    })
-                    .ConfigureServices(services =>
-                    {
-                        services.AddCors(options =>
-                             options.AddPolicy("any", builder =>
-                                 builder.AllowAnyOrigin()
-                                        .AllowAnyMethod()
-                                        .AllowAnyHeader()
-                                        .AllowAnyOrigin()
-                                        .SetIsOriginAllowed(o=>true)));
-                        services.AddMemoryCache();
-                        services.AddControllers();
-                        services.AddMvc();
                     });
                 })
                 .ConfigureAppConfiguration((hostingContext, config) =>
@@ -57,6 +55,7 @@ namespace JT1078.Gateway.Coordinator
                 {
                     services.AddSingleton<ILoggerFactory, LoggerFactory>();
                     services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+                  
                 })
                 .Build()
                 .Run();

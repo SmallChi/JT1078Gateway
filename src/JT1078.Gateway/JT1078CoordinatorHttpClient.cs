@@ -25,6 +25,23 @@ namespace JT1078.Gateway
             this.httpClient = new HttpClient();
             this.httpClient.BaseAddress = new Uri(Configuration.CoordinatorUri);
             this.httpClient.Timeout = TimeSpan.FromSeconds(3);
+            Login().GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// 登录
+        /// </summary>
+        public async ValueTask Login()
+        {
+            string json = $"{{\"UserName\":\"{Configuration.CoordinatorUserName}\",\"Password\":\"{Configuration.CoordinatorPassword}\"}}";
+            var response = await httpClient.PostAsync($"{endpoint}/User/Login", new StringContent(json));
+            response.EnsureSuccessStatusCode();
+            var token = await response.Content.ReadAsStringAsync();
+            if (string.IsNullOrEmpty(token))
+            {
+                throw new NullReferenceException("token is null");
+            }
+            httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {token}");
         }
 
         /// <summary>
@@ -32,7 +49,7 @@ namespace JT1078.Gateway
         /// </summary>
         public async ValueTask Reset()
         {
-            await httpClient.GetAsync($"{endpoint}/reset");
+            await httpClient.PostAsync($"{endpoint}/Coordinator/Reset", new StringContent(""));
         }
 
         /// <summary>
@@ -41,7 +58,7 @@ namespace JT1078.Gateway
         /// <param name="content"></param>
         public async ValueTask Heartbeat(string content)
         {
-            await httpClient.PostAsync($"{endpoint}/heartbeat", new StringContent(content));
+            await httpClient.PostAsync($"{endpoint}/Coordinator/Heartbeat", new StringContent(content));
         }
 
         /// <summary>
@@ -49,11 +66,11 @@ namespace JT1078.Gateway
         /// </summary>
         /// <param name="terminalPhoneNo"></param>
         /// <param name="channelNo"></param>
-        public async ValueTask ChannelClose(string terminalPhoneNo,int channelNo)
+        public async ValueTask ChannelClose(string terminalPhoneNo, int channelNo)
         {
             //todo:通过自维护，当协调重启导致集群内网关未关闭的情况下，通过轮询的方式再去调用
             string json = $"{{\"TerminalPhoneNo\":\"{terminalPhoneNo}\",\"ChannelNo\":\"{channelNo}\"}}";
-            await httpClient.PostAsync($"{endpoint}/ChannelClose", new StringContent(json));
+            await httpClient.PostAsync($"{endpoint}/Coordinator/ChannelClose", new StringContent(json));
         }
     }
 }

@@ -43,7 +43,15 @@ namespace JT1078.Gateway.Configurations
         /// http://localhost/
         /// http://127.0.0.1/
         /// </summary>
-        public string CoordinatorUri { get; set; } = "http://localhost:1080/";
+        public string CoordinatorUri { get; set; } = "http://localhost:1080/";       
+        /// <summary>
+        /// 协调器Coordinator主机登录账号
+        /// </summary>
+        public string CoordinatorUserName { get; set; } = "admin";
+        /// <summary>
+        /// 协调器Coordinator主机登录密码
+        /// </summary>
+        public string CoordinatorPassword { get; set; } = "123456";
         public JT1078Configuration Value => this;
     }
 }

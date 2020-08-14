@@ -1,4 +1,5 @@
-﻿using JT1078.Gateway.InMemoryMQ;
+﻿using JT1078.Flv;
+using JT1078.Gateway.InMemoryMQ;
 using JT1078.Gateway.TestNormalHosting.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,12 +29,13 @@ namespace JT1078.Gateway.TestNormalHosting
                 {
                     services.AddSingleton<ILoggerFactory, LoggerFactory>();
                     services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+                    services.AddSingleton<FlvEncoder>();
                     //使用内存队列实现会话通知
                     services.AddJT1078Gateway(hostContext.Configuration)
                             .AddTcp()
                             .AddUdp()
                             .AddHttp()
-                            .AddCoordinatorHttpClient()
+                            //.AddCoordinatorHttpClient()
                             .AddNormal()
                             .AddMsgProducer()
                             .AddMsgConsumer();

@@ -88,16 +88,20 @@ namespace JT1078.Gateway.Sessions
         /// <summary>
         /// 发送音视频数据
         /// </summary>
-        /// <param name="sim"></param>
-        /// <param name="channelNo"></param>
+        /// <param name="httpContexts"></param>
         /// <param name="data"></param>
-        public void SendAVData(string sim,int channelNo,byte[] data)
+        /// <param name="firstSend"></param>
+        public void SendAVData(List<JT1078HttpContext> httpContexts, byte[] data, bool firstSend)
         {
-            var contexts = Sessions.Select(s => s.Value).Where(w => w.Sim == sim && w.ChannelNo == channelNo).ToList();
-            ParallelLoopResult parallelLoopResult= Parallel.ForEach(contexts, async(context) => 
+            ParallelLoopResult parallelLoopResult = Parallel.ForEach(httpContexts, async (context) =>
             {
                 if (context.IsWebSocket)
                 {
+                    if (firstSend)
+                    {
+                        context.FirstSend = firstSend;
+                        Sessions.TryUpdate(context.SessionId, context, context);
+                    }
                     try
                     {
                         await context.WebSocketSendBinaryAsync(data);
@@ -109,13 +113,13 @@ namespace JT1078.Gateway.Sessions
                             Logger.LogInformation($"[ws close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
                         }
                         remove(context.SessionId);
-                    }
+                    }                   
                 }
                 else
                 {
-                    if (!context.SendChunked)
+                    if (firstSend)
                     {
-                        context.SendChunked = true;
+                        context.FirstSend = firstSend;
                         Sessions.TryUpdate(context.SessionId, context, context);
                         try
                         {
@@ -153,89 +157,6 @@ namespace JT1078.Gateway.Sessions
             }
         }
 
-        /// <summary>
-        /// 发送音视频数据到websocket
-        /// </summary>
-        /// <param name="sim"></param>
-        /// <param name="channelNo"></param>
-        /// <param name="data"></param>
-        public void SendAVData2WebSocket(string sim, int channelNo, byte[] data)
-        {
-            var contexts = Sessions.Select(s => s.Value).Where(w => w.Sim == sim && w.ChannelNo == channelNo && w.IsWebSocket).ToList();
-            ParallelLoopResult parallelLoopResult = Parallel.ForEach(contexts, async (context) =>
-            {
-                if (context.IsWebSocket)
-                {
-                    try
-                    {
-                        await context.WebSocketSendBinaryAsync(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (Logger.IsEnabled(LogLevel.Information))
-                        {
-                            Logger.LogInformation($"[ws close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
-                        }
-                        remove(context.SessionId);
-                    }
-                }
-            });
-            if (parallelLoopResult.IsCompleted)
-            {
-
-            }
-        }
-
-        /// <summary>
-        /// 发送音视频数据到Http Chunked中
-        /// </summary>
-        /// <param name="sim"></param>
-        /// <param name="channelNo"></param>
-        /// <param name="data"></param>
-        public void SendAVData2HttpChunked(string sim, int channelNo, byte[] data)
-        {
-            var contexts = Sessions.Select(s => s.Value).Where(w => w.Sim == sim && w.ChannelNo == channelNo && !w.IsWebSocket).ToList();
-            ParallelLoopResult parallelLoopResult = Parallel.ForEach(contexts, async (context) =>
-            {
-                if (!context.SendChunked)
-                {
-                    context.SendChunked = true;
-                    Sessions.TryUpdate(context.SessionId, context, context);
-                    try
-                    {
-                        await context.HttpSendFirstChunked(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (Logger.IsEnabled(LogLevel.Information))
-                        {
-                            Logger.LogInformation($"[http close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
-                        }
-                        remove(context.SessionId);
-                    }
-                }
-                else
-                {
-                    try
-                    {
-                        await context.HttpSendChunked(data);
-                    }
-                    catch (Exception ex)
-                    {
-                        if (Logger.IsEnabled(LogLevel.Information))
-                        {
-                            Logger.LogInformation($"[http close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
-                        }
-                        remove(context.SessionId);
-                    }
-                }             
-            });
-            if (parallelLoopResult.IsCompleted)
-            {
-
-            }
-        }
-
         public int SessionCount 
         {
             get
@@ -258,6 +179,11 @@ namespace JT1078.Gateway.Sessions
             {
                 return Sessions.Count(c => c.Value.IsWebSocket);
             }
+        }
+
+        public List<JT1078HttpContext> GetAllBySimAndChannelNo(string sim, int channelNo)
+        {
+            return Sessions.Select(s => s.Value).Where(w => w.Sim == sim && w.ChannelNo == channelNo).ToList();
         }
 
         public List<JT1078HttpContext> GetAll()

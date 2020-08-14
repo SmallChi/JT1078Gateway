@@ -23,14 +23,14 @@ namespace JT1078.Gateway.Metadata
             }
         }
         public DateTime StartTime { get; set; }
-        public bool SendChunked { get; set; }
+        public bool FirstSend { get; set; }
         public JT1078HttpContext(HttpListenerContext context, IPrincipal user)
         {
             Context = context;
             User = user;
             StartTime = DateTime.Now;
             SessionId = Guid.NewGuid().ToString("N");
-            SendChunked = false;
+            FirstSend = false;
         }
         public JT1078HttpContext(HttpListenerContext context, HttpListenerWebSocketContext webSocketContext, IPrincipal user)
         {
@@ -39,7 +39,7 @@ namespace JT1078.Gateway.Metadata
             User = user;
             StartTime = DateTime.Now;
             SessionId = Guid.NewGuid().ToString("N");
-            SendChunked = false;
+            FirstSend = false;
         }
     }
 }

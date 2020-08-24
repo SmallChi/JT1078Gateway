@@ -16,6 +16,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JT1078.Gateway.Extensions;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace JT1078.Gateway
 {
@@ -26,12 +27,14 @@ namespace JT1078.Gateway
         private readonly JT1078Configuration Configuration;
 
         private readonly IJT1078Authorization authorization;
+        private IMemoryCache memoryCache;
 
         private HttpListener listener;
 
         private JT1078HttpSessionManager SessionManager;
 
         public JT1078HttpServer(
+            IMemoryCache memoryCache,
             IOptions<JT1078Configuration> jT1078ConfigurationAccessor,
             IJT1078Authorization authorization,
             JT1078HttpSessionManager sessionManager,
@@ -41,6 +44,7 @@ namespace JT1078.Gateway
             Configuration = jT1078ConfigurationAccessor.Value;
             this.authorization = authorization;
             this.SessionManager = sessionManager;
+            this.memoryCache = memoryCache;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -107,8 +111,16 @@ namespace JT1078.Gateway
             }
             if (url.EndsWith(".m3u8") || url.EndsWith(".ts"))
             {
+                string key = $"{queryParams[0].Split('=')[1]}_{queryParams[1].Split('=')[1]}";//默认queryParams第一个参数是终端号，第二个参数是通道号
+                memoryCache.GetOrCreate(key, (cacheEntry) => {
+                    cacheEntry.SetSlidingExpiration(TimeSpan.FromSeconds(20));
+                    cacheEntry.RegisterPostEvictionCallback((key, value, reason, state) => {
+                        //当清空httpssion时，同时清除tcpsseion
+                    });
+                    return DateTime.Now;
+                });
                 string filename = Path.GetFileName(url);
-                string filepath = Path.Combine(Configuration.HlsRootDirectory, $"{queryParams[0].Split('=')[1]}_{queryParams[1].Split('=')[1]}", filename);//默认queryParams第一个参数是终端号，第二个参数是通道号
+                string filepath = Path.Combine(Configuration.HlsRootDirectory, key, filename);
                 if (!File.Exists(filepath))
                 {
                     context.Http404();

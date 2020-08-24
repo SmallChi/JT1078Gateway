@@ -43,7 +43,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                     if (otherHttpSessions.Count > 0)
                     {
                         var flvVideoBuffer = FlvEncoder.EncoderVideoTag(merge, false);
-                        HttpSessionManager.SendAVData(firstHttpSessions, flvVideoBuffer, false);
+                        HttpSessionManager.SendAVData(otherHttpSessions, flvVideoBuffer, false);
                     }
                 }
             });

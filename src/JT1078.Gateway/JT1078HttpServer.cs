@@ -98,24 +98,21 @@ namespace JT1078.Gateway
                 context.Http404();
                 return;
             }
-            var queryStringIndex = context.Request.RawUrl.IndexOf("?");
-            string url = "";
-            if (queryStringIndex > 0)
-            {
-                url = context.Request.RawUrl.Substring(1, queryStringIndex-1);
-            }
-            else
-            {
-                url = context.Request.RawUrl;
+            var uri = new Uri(context.Request.RawUrl);
+            string url = uri.AbsolutePath;
+            var queryParams = uri.Query.Substring(1, uri.Query.Length - 1).Split('&');
+            if (queryParams.Length < 2) {
+                context.Http404();
+                return;
             }
             if (url.EndsWith(".m3u8") || url.EndsWith(".ts"))
             {
                 string filename = Path.GetFileName(url);
-                string filepath = Path.Combine(Configuration.HlsRootDirectory, Path.GetFileNameWithoutExtension(filename), filename);
+                string filepath = Path.Combine(Configuration.HlsRootDirectory, $"{queryParams[0].Split('=')[1]}_{queryParams[1].Split('=')[1]}", filename);//默认queryParams第一个参数是终端号，第二个参数是通道号
                 if (!File.Exists(filepath))
                 {
                     context.Http404();
-                    return;
+                    return; 
                 }
                 try
                 {

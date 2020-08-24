@@ -186,6 +186,11 @@ namespace JT1078.Gateway.Sessions
             return Sessions.Select(s => s.Value).Where(w => w.Sim == sim && w.ChannelNo == channelNo).ToList();
         }
 
+        public List<JT1078HttpContext> GetAllHttpContextBySimAndChannelNo(string sim, int channelNo)
+        {
+            return Sessions.Select(s => s.Value).Where(w => w.Sim == sim && w.ChannelNo == channelNo&&!w.IsWebSocket).ToList();
+        }
+
         public List<JT1078HttpContext> GetAll()
         {
             return Sessions.Select(s => s.Value).ToList();

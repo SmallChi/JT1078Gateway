@@ -11,6 +11,7 @@ using System.Buffers.Binary;
 using JT1078.Protocol.Enums;
 using System.Linq;
 using System.Text;
+using System.IO;
 
 namespace JT1078.Gateway.Test
 {
@@ -239,6 +240,16 @@ namespace JT1078.Gateway.Test
         {
             var empty = "000000000".TrimStart('0');
             Assert.Equal("", empty);
+        }
+        [Fact]
+        public void Test6()
+        {
+            string url = "https://www.baidu.com:8080/live.m3u8?aa=aa&bb=bb";
+            var uri = new Uri(url);
+            string filename = Path.GetFileName(uri.AbsolutePath);
+            var name = Path.GetFileNameWithoutExtension(filename);
+            var extension = Path.GetExtension(filename);
+            var queryParams = uri.Query.Substring(1, uri.Query.Length - 1).Split('&');
         }
     }
 }

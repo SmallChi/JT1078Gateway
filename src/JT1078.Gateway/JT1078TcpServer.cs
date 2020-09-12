@@ -164,6 +164,7 @@ namespace JT1078.Gateway
         }
         private async Task ReadPipeAsync(JT1078TcpSession session, PipeReader reader)
         {
+            FixedHeaderInfo fixedHeaderInfo = new FixedHeaderInfo();
             while (true)
             {
                 ReadResult result = await reader.ReadAsync();
@@ -179,7 +180,7 @@ namespace JT1078.Gateway
                     if (result.IsCanceled) break;
                     if (buffer.Length > 0)
                     {
-                        ReaderBuffer(ref buffer, session, out consumed, out examined);
+                        ReaderBuffer(ref buffer, fixedHeaderInfo, session, out consumed, out examined);
                     }
                 }
 #pragma warning disable CA1031 // Do not catch general exception types
@@ -196,32 +197,32 @@ namespace JT1078.Gateway
             }
             reader.Complete();
         }
-        private void ReaderBuffer(ref ReadOnlySequence<byte> buffer, JT1078TcpSession session, out SequencePosition consumed, out SequencePosition examined)
+        private void ReaderBuffer(ref ReadOnlySequence<byte> buffer, FixedHeaderInfo fixedHeaderInfo, JT1078TcpSession session, out SequencePosition consumed, out SequencePosition examined)
         {
             consumed = buffer.Start;
             examined = buffer.End;
-            if (buffer.Length < 15)
-            {
-                throw new ArgumentException("not JT1078 package");
-            }
             SequenceReader<byte> seqReader = new SequenceReader<byte>(buffer);
             long totalConsumed = 0;
             while (!seqReader.End)
             {
-                if ((seqReader.Length - seqReader.Consumed) < 15)
+                if (!fixedHeaderInfo.FoundHeader)
                 {
-                    throw new ArgumentException("not JT1078 package");
-                }
-                var header = seqReader.Sequence.Slice(seqReader.Consumed, 4);
-                var headerValue = BinaryPrimitives.ReadUInt32BigEndian(header.FirstSpan);
-                if (JT1078Package.FH == headerValue)
-                {
-                    //sim
-                    var sim = ReadBCD(seqReader.Sequence.Slice(seqReader.Consumed + 8, 6).FirstSpan, 12);
-                    //根据数据类型处理对应的数据长度
-                    seqReader.Advance(15);
-                    if (seqReader.TryRead(out byte dataType))
+                    if (seqReader.Length < 4)
+                        throw new ArgumentException("not JT1078 package");
+                    var header = seqReader.Sequence.Slice(seqReader.Consumed, 4);
+                    var headerValue = BinaryPrimitives.ReadUInt32BigEndian(header.FirstSpan);
+                    if (JT1078Package.FH == headerValue)
                     {
+                        //sim
+                        fixedHeaderInfo.SIM = ReadBCD(seqReader.Sequence.Slice(seqReader.Consumed + 8, 6).FirstSpan, 12);
+                        if (string.IsNullOrEmpty(fixedHeaderInfo.SIM))
+                        {
+                            fixedHeaderInfo.SIM = session.SessionID;
+                        }
+                        //根据数据类型处理对应的数据长度
+                        fixedHeaderInfo.TotalSize += 15;
+                        var dataType = seqReader.Sequence.Slice(seqReader.Consumed+fixedHeaderInfo.TotalSize, 1).FirstSpan[0];
+                        fixedHeaderInfo.TotalSize += 1;
                         JT1078Label3 label3 = new JT1078Label3(dataType);
                         int bodyLength = 0;
                         //透传的时候没有该字段
@@ -238,37 +239,66 @@ namespace JT1078.Gateway
                             //上一个关键帧 + 上一帧 = 2 + 2
                             bodyLength += 4;
                         }
-                        seqReader.Advance(bodyLength);
-                        var bodyLengthFirstSpan = seqReader.Sequence.Slice(seqReader.Consumed, 2).FirstSpan;
+                        fixedHeaderInfo.TotalSize += bodyLength;
+                        var bodyLengthFirstSpan = seqReader.Sequence.Slice(seqReader.Consumed + fixedHeaderInfo.TotalSize, 2).FirstSpan;
                         //数据体长度
-                        seqReader.Advance(2);
+                        fixedHeaderInfo.TotalSize += 2;
                         bodyLength = BinaryPrimitives.ReadUInt16BigEndian(bodyLengthFirstSpan);
+                        if (bodyLength == 0)//数据体长度为0
+                        {
+                            seqReader.Advance(fixedHeaderInfo.TotalSize);
+                            var package1 = seqReader.Sequence.Slice(totalConsumed, seqReader.Consumed - totalConsumed);
+                            try
+                            {
+                                SessionManager.TryLink(fixedHeaderInfo.SIM, session);
+                                if (jT1078UseType == JT1078UseType.Queue)
+                                {
+                                    jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package1.FirstSpan.ToArray());
+                                }
+                                else
+                                {
+                                    jT1078PackageProducer.ProduceAsync(fixedHeaderInfo.SIM, JT1078Serializer.Deserialize(package1.FirstSpan));
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logger.LogError(ex, $"[Parse]:{package1.ToArray().ToHexString()}");
+                            }
+                            finally
+                            {
+                                totalConsumed += (seqReader.Consumed - totalConsumed);
+                                fixedHeaderInfo.Reset();
+                            }
+                            continue;
+                        }
                         //数据体
-                        seqReader.Advance(bodyLength);
-                        if (string.IsNullOrEmpty(sim))
-                        {
-                            sim = session.SessionID;
-                        }
-                        SessionManager.TryLink(sim, session);
-                        var package = seqReader.Sequence.Slice(totalConsumed, seqReader.Consumed - totalConsumed);
-                        try
-                        {
-                            if (jT1078UseType== JT1078UseType.Queue)
-                            {
-                                jT1078MsgProducer.ProduceAsync(sim, package.ToArray());
-                            }
-                            else
-                            {
-                                jT1078PackageProducer.ProduceAsync(sim, JT1078Serializer.Deserialize(package.FirstSpan));
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.LogError(ex, $"[Parse]:{package.ToArray().ToHexString()}");
-                        }
-                        totalConsumed += (seqReader.Consumed - totalConsumed);
-                        if (seqReader.End) break;
+                        fixedHeaderInfo.TotalSize += bodyLength;
+                        fixedHeaderInfo.FoundHeader = true;
                     }
+                }
+                if (seqReader.Length < fixedHeaderInfo.TotalSize) break;
+                seqReader.Advance(fixedHeaderInfo.TotalSize);
+                var package = seqReader.Sequence.Slice(totalConsumed, seqReader.Consumed - totalConsumed);
+                try
+                {
+                    SessionManager.TryLink(fixedHeaderInfo.SIM, session);
+                    if (jT1078UseType == JT1078UseType.Queue)
+                    {
+                        jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package.ToArray());
+                    }
+                    else
+                    {
+                        jT1078PackageProducer.ProduceAsync(fixedHeaderInfo.SIM, JT1078Serializer.Deserialize(package.FirstSpan));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, $"[Parse]:{package.ToArray().ToHexString()}");
+                }
+                finally
+                {
+                    totalConsumed += (seqReader.Consumed - totalConsumed);
+                    fixedHeaderInfo.Reset();
                 }
             }
             if (seqReader.Length == totalConsumed)
@@ -297,6 +327,18 @@ namespace JT1078.Gateway
                 bcdSb.Append(readOnlySpan[i].ToString("X2"));
             }
             return bcdSb.ToString().TrimStart('0');
+        }
+
+        class FixedHeaderInfo
+        {
+            public bool FoundHeader { get; set; }
+            public int TotalSize { get; set; }
+            public string SIM { get; set; }
+            public void Reset()
+            {
+                FoundHeader = false;
+                TotalSize = 0;
+            }
         }
     }
 }

@@ -11,12 +11,12 @@ using System.Linq;
 
 namespace JT1078.Gateway.TestNormalHosting.Services
 {
-    public class JT1078NormalMsgHostedService : BackgroundService
+    public class JT1078FlvNormalMsgHostedService : BackgroundService
     {
         private IJT1078PackageConsumer PackageConsumer;
         private JT1078HttpSessionManager HttpSessionManager;
         private FlvEncoder FlvEncoder;
-        public JT1078NormalMsgHostedService(
+        public JT1078FlvNormalMsgHostedService(
             FlvEncoder flvEncoder,
             JT1078HttpSessionManager httpSessionManager,
             IJT1078PackageConsumer packageConsumer)

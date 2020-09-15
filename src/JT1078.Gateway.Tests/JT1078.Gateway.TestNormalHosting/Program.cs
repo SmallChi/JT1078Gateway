@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
@@ -24,8 +25,10 @@ namespace JT1078.Gateway.TestNormalHosting
                 })
                 .ConfigureLogging((context, logging) =>
                 {
-                    logging.AddConsole();
                     logging.SetMinimumLevel(LogLevel.Trace);
+                    Console.WriteLine($"Environment.OSVersion.Platform:{Environment.OSVersion.Platform.ToString()}");
+                    NLog.LogManager.LoadConfiguration($"Configs/nlog.{Environment.OSVersion.Platform.ToString()}.config");
+                    logging.AddNLog(new NLogProviderOptions { CaptureMessageTemplates = true, CaptureMessageProperties = true });
                 })
                 .ConfigureServices((hostContext, services) =>
                 {

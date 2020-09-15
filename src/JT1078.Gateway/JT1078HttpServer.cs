@@ -27,6 +27,7 @@ namespace JT1078.Gateway
         private readonly JT1078Configuration Configuration;
 
         private readonly IJT1078Authorization authorization;
+
         private IMemoryCache memoryCache;
 
         private HttpListener listener;
@@ -102,15 +103,16 @@ namespace JT1078.Gateway
                 context.Http404();
                 return;
             }
-            var uri = new Uri(context.Request.RawUrl);
-            string url = uri.AbsolutePath;
-            var queryParams = uri.Query.Substring(1, uri.Query.Length - 1).Split('&');
-            if (queryParams.Length < 2) {
-                context.Http404();
-                return;
-            }
-            if (url.EndsWith(".m3u8") || url.EndsWith(".ts"))
+            if (context.Request.RawUrl.EndsWith(".m3u8") || context.Request.RawUrl.EndsWith(".ts"))
             {
+                var uri = new Uri(context.Request.RawUrl);
+                string url = uri.AbsolutePath;
+                var queryParams = uri.Query.Substring(1, uri.Query.Length - 1).Split('&');
+                if (queryParams.Length < 2)
+                {
+                    context.Http404();
+                    return;
+                }
                 string key = $"{queryParams[0].Split('=')[1]}_{queryParams[1].Split('=')[1]}";//默认queryParams第一个参数是终端号，第二个参数是通道号
                 memoryCache.GetOrCreate(key, (cacheEntry) => {
                     cacheEntry.SetSlidingExpiration(TimeSpan.FromSeconds(20));
@@ -175,7 +177,8 @@ namespace JT1078.Gateway
                 jT1078HttpContext.Sim = sim;
                 jT1078HttpContext.ChannelNo = channelNo;
                 SessionManager.TryAdd(jT1078HttpContext);
-                await jT1078HttpContext.WebSocketSendHelloAsync();
+                //这个发送出去，flv.js就报错了
+                //await jT1078HttpContext.WebSocketSendHelloAsync();
                 await Task.Factory.StartNew(async(state) =>
                 {
                     //https://www.bejson.com/httputil/websocket/

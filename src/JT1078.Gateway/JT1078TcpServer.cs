@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO.Pipelines;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -27,13 +28,15 @@ namespace JT1078.Gateway
 
         private readonly ILogger Logger;
 
+        private readonly ILogger LogLogger;
+
         private readonly JT1078Configuration Configuration;
 
         private readonly JT1078SessionManager SessionManager;
 
-        private readonly IJT1078PackageProducer  jT1078PackageProducer;
+        private readonly IJT1078PackageProducer jT1078PackageProducer;
 
-        private readonly IJT1078MsgProducer  jT1078MsgProducer;
+        private readonly IJT1078MsgProducer jT1078MsgProducer;
 
         private readonly JT1078UseType jT1078UseType;
 
@@ -53,6 +56,7 @@ namespace JT1078.Gateway
             SessionManager = jT1078SessionManager;
             jT1078UseType = JT1078UseType.Normal;
             Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
+            LogLogger = loggerFactory.CreateLogger("JT1078Logging");
             Configuration = jT1078ConfigurationAccessor.Value;
             this.jT1078PackageProducer = jT1078PackageProducer;
             InitServer();
@@ -74,6 +78,7 @@ namespace JT1078.Gateway
             SessionManager = jT1078SessionManager;
             jT1078UseType = JT1078UseType.Queue;
             Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
+            LogLogger = loggerFactory.CreateLogger("JT1078Logging");
             Configuration = jT1078ConfigurationAccessor.Value;
             this.jT1078MsgProducer = jT1078MsgProducer;
             InitServer();
@@ -199,29 +204,30 @@ namespace JT1078.Gateway
         }
         private void ReaderBuffer(ref ReadOnlySequence<byte> buffer, FixedHeaderInfo fixedHeaderInfo, JT1078TcpSession session, out SequencePosition consumed, out SequencePosition examined)
         {
-            consumed = buffer.Start;
-            examined = buffer.End;
             SequenceReader<byte> seqReader = new SequenceReader<byte>(buffer);
             long totalConsumed = 0;
             while (!seqReader.End)
             {
+                if (seqReader.Remaining < 30)
+                {
+                    fixedHeaderInfo.Reset();
+                    break;
+                }
                 if (!fixedHeaderInfo.FoundHeader)
                 {
-                    if (seqReader.Length < 4)
-                        throw new ArgumentException("not JT1078 package");
-                    var header = seqReader.Sequence.Slice(seqReader.Consumed, 4);
+                    var header = seqReader.Sequence.Slice(0, 4);
                     var headerValue = BinaryPrimitives.ReadUInt32BigEndian(header.FirstSpan);
                     if (JT1078Package.FH == headerValue)
                     {
                         //sim
-                        fixedHeaderInfo.SIM = ReadBCD(seqReader.Sequence.Slice(seqReader.Consumed + 8, 6).FirstSpan, 12);
+                        fixedHeaderInfo.SIM = ReadBCD(seqReader.Sequence.Slice(8, 6).FirstSpan, 12);
                         if (string.IsNullOrEmpty(fixedHeaderInfo.SIM))
                         {
                             fixedHeaderInfo.SIM = session.SessionID;
                         }
                         //根据数据类型处理对应的数据长度
                         fixedHeaderInfo.TotalSize += 15;
-                        var dataType = seqReader.Sequence.Slice(seqReader.Consumed+fixedHeaderInfo.TotalSize, 1).FirstSpan[0];
+                        var dataType = seqReader.Sequence.Slice(fixedHeaderInfo.TotalSize, 1).FirstSpan[0];
                         fixedHeaderInfo.TotalSize += 1;
                         JT1078Label3 label3 = new JT1078Label3(dataType);
                         int bodyLength = 0;
@@ -240,33 +246,43 @@ namespace JT1078.Gateway
                             bodyLength += 4;
                         }
                         fixedHeaderInfo.TotalSize += bodyLength;
-                        var bodyLengthFirstSpan = seqReader.Sequence.Slice(seqReader.Consumed + fixedHeaderInfo.TotalSize, 2).FirstSpan;
+                        var bodyLengthFirstSpan = seqReader.Sequence.Slice(fixedHeaderInfo.TotalSize, 2).FirstSpan;
                         //数据体长度
                         fixedHeaderInfo.TotalSize += 2;
                         bodyLength = BinaryPrimitives.ReadUInt16BigEndian(bodyLengthFirstSpan);
+                        if (bodyLength < 0)
+                        {
+                            fixedHeaderInfo.Reset();
+                            throw new ArgumentException("jt1078 package body length Error.");
+                        }
                         if (bodyLength == 0)//数据体长度为0
                         {
                             seqReader.Advance(fixedHeaderInfo.TotalSize);
-                            var package1 = seqReader.Sequence.Slice(totalConsumed, seqReader.Consumed - totalConsumed);
+                            var package1 = seqReader.Sequence.Slice(0, fixedHeaderInfo.TotalSize).ToArray();
+                            if (LogLogger.IsEnabled(LogLevel.Trace))
+                            {
+                                LogLogger.LogTrace($"{package1.ToHexString()}");
+                            }
                             try
                             {
                                 SessionManager.TryLink(fixedHeaderInfo.SIM, session);
                                 if (jT1078UseType == JT1078UseType.Queue)
                                 {
-                                    jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package1.FirstSpan.ToArray());
+                                    jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package1.ToArray());
                                 }
                                 else
                                 {
-                                    jT1078PackageProducer.ProduceAsync(fixedHeaderInfo.SIM, JT1078Serializer.Deserialize(package1.FirstSpan));
+                                    jT1078PackageProducer.ProduceAsync(fixedHeaderInfo.SIM, JT1078Serializer.Deserialize(package1));
                                 }
                             }
                             catch (Exception ex)
                             {
-                                Logger.LogError(ex, $"[Parse]:{package1.ToArray().ToHexString()}");
+                                LogLogger.LogError($"[Error Parse 1]:{package1.ToHexString()}");
+                                Logger.LogError(ex, $"[Error Parse 1]:{package1.ToHexString()}");
                             }
                             finally
                             {
-                                totalConsumed += (seqReader.Consumed - totalConsumed);
+                                totalConsumed += seqReader.Consumed;
                                 fixedHeaderInfo.Reset();
                             }
                             continue;
@@ -275,44 +291,67 @@ namespace JT1078.Gateway
                         fixedHeaderInfo.TotalSize += bodyLength;
                         fixedHeaderInfo.FoundHeader = true;
                     }
+                    else
+                    {
+                        fixedHeaderInfo.Reset();
+                        throw new ArgumentException("not JT1078 package.");
+                    }
                 }
-                if (seqReader.Length < fixedHeaderInfo.TotalSize) break;
+                if ((seqReader.Remaining - fixedHeaderInfo.TotalSize) < 0) break;
                 seqReader.Advance(fixedHeaderInfo.TotalSize);
-                var package = seqReader.Sequence.Slice(totalConsumed, seqReader.Consumed - totalConsumed);
+                var package = seqReader.Sequence.Slice(0, fixedHeaderInfo.TotalSize).ToArray();
+                if (LogLogger.IsEnabled(LogLevel.Trace))
+                {
+                    LogLogger.LogTrace($"{package.ToHexString()}");
+                }
                 try
                 {
                     SessionManager.TryLink(fixedHeaderInfo.SIM, session);
                     if (jT1078UseType == JT1078UseType.Queue)
                     {
-                        jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package.ToArray());
+                        jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package);
                     }
                     else
                     {
-                        jT1078PackageProducer.ProduceAsync(fixedHeaderInfo.SIM, JT1078Serializer.Deserialize(package.FirstSpan));
+                        jT1078PackageProducer.ProduceAsync(fixedHeaderInfo.SIM, JT1078Serializer.Deserialize(package));
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, $"[Parse]:{package.ToArray().ToHexString()}");
+                    LogLogger.LogError($"[Error Parse 2]:{package.ToHexString()}");
+                    Logger.LogError(ex, $"[Error Parse 2]:{package.ToHexString()}");
                 }
                 finally
                 {
-                    totalConsumed += (seqReader.Consumed - totalConsumed);
+                    totalConsumed += seqReader.Consumed;
                     fixedHeaderInfo.Reset();
+                    seqReader = new SequenceReader<byte>(seqReader.Sequence.Slice(seqReader.Consumed));
                 }
             }
-            if (seqReader.Length == totalConsumed)
+            if (seqReader.End)
             {
                 examined = consumed = buffer.End;
             }
             else
             {
                 consumed = buffer.GetPosition(totalConsumed);
+                examined = buffer.End;
             }
         }
         public Task StopAsync(CancellationToken cancellationToken)
         {
             Logger.LogInformation("JT1078 Tcp Server Stop");
+            SessionManager.GetTcpAll().ForEach(session =>
+            {
+                try
+                {
+                    session.Close();
+                }
+                catch (Exception ex)
+                {
+
+                }
+            });
             if (server?.Connected ?? false)
                 server.Shutdown(SocketShutdown.Both);
             server?.Close();

@@ -88,72 +88,65 @@ namespace JT1078.Gateway.Sessions
         /// <summary>
         /// 发送音视频数据
         /// </summary>
-        /// <param name="httpContexts"></param>
+        /// <param name="httpContext"></param>
         /// <param name="data"></param>
         /// <param name="firstSend"></param>
-        public void SendAVData(List<JT1078HttpContext> httpContexts, byte[] data, bool firstSend)
+        public async void SendAVData(JT1078HttpContext httpContext, byte[] data, bool firstSend)
         {
-            ParallelLoopResult parallelLoopResult = Parallel.ForEach(httpContexts, async (context) =>
+            if (httpContext.IsWebSocket)
             {
-                if (context.IsWebSocket)
+                if (firstSend)
                 {
-                    if (firstSend)
+                    httpContext.FirstSend = firstSend;
+                    Sessions.TryUpdate(httpContext.SessionId, httpContext, httpContext);
+                }
+                try
+                {
+                    await httpContext.WebSocketSendBinaryAsync(data);
+                }
+                catch (Exception ex)
+                {
+                    if (Logger.IsEnabled(LogLevel.Information))
                     {
-                        context.FirstSend = firstSend;
-                        Sessions.TryUpdate(context.SessionId, context, context);
+                        Logger.LogInformation($"[ws close]:{httpContext.SessionId}-{httpContext.Sim}-{httpContext.ChannelNo}-{httpContext.StartTime:yyyyMMddhhmmss}");
                     }
+                    remove(httpContext.SessionId);
+                }                   
+            }
+            else
+            {
+                if (firstSend)
+                {
+                    httpContext.FirstSend = firstSend;
+                    Sessions.TryUpdate(httpContext.SessionId, httpContext, httpContext);
                     try
                     {
-                        await context.WebSocketSendBinaryAsync(data);
+                        await httpContext.HttpSendFirstChunked(data);
                     }
                     catch (Exception ex)
                     {
                         if (Logger.IsEnabled(LogLevel.Information))
                         {
-                            Logger.LogInformation($"[ws close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
+                            Logger.LogInformation($"[http close]:{httpContext.SessionId}-{httpContext.Sim}-{httpContext.ChannelNo}-{httpContext.StartTime:yyyyMMddhhmmss}");
                         }
-                        remove(context.SessionId);
-                    }                   
+                        remove(httpContext.SessionId);
+                    }
                 }
                 else
                 {
-                    if (firstSend)
+                    try
                     {
-                        context.FirstSend = firstSend;
-                        Sessions.TryUpdate(context.SessionId, context, context);
-                        try
-                        {
-                            await context.HttpSendFirstChunked(data);
-                        }
-                        catch (Exception ex)
-                        {
-                            if (Logger.IsEnabled(LogLevel.Information))
-                            {
-                                Logger.LogInformation($"[http close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
-                            }
-                            remove(context.SessionId);
-                        }
+                        await httpContext.HttpSendChunked(data);
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        try
+                        if (Logger.IsEnabled(LogLevel.Information))
                         {
-                            await context.HttpSendChunked(data);
+                            Logger.LogInformation($"[http close]:{httpContext.SessionId}-{httpContext.Sim}-{httpContext.ChannelNo}-{httpContext.StartTime:yyyyMMddhhmmss}");
                         }
-                        catch (Exception ex)
-                        {
-                            if (Logger.IsEnabled(LogLevel.Information))
-                            {
-                                Logger.LogInformation($"[http close]:{context.SessionId}-{context.Sim}-{context.ChannelNo}-{context.StartTime:yyyyMMddhhmmss}");
-                            }
-                            remove(context.SessionId);
-                        }
+                        remove(httpContext.SessionId);
                     }
                 }
-            });
-            if (parallelLoopResult.IsCompleted)
-            {
-
             }
         }
 

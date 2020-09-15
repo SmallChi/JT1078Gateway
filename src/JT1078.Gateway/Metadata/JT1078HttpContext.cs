@@ -4,13 +4,16 @@ using System.Net;
 using System.Net.WebSockets;
 using System.Security.Principal;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace JT1078.Gateway.Metadata
 {
     public class JT1078HttpContext
     {
         public string SessionId { get; }
+        [JsonIgnore]
         public HttpListenerContext Context { get; }
+        [JsonIgnore]
         public HttpListenerWebSocketContext WebSocketContext { get; }
         public IPrincipal User { get; }
         public string Sim { get; set; }

@@ -7,11 +7,11 @@ namespace JT1078.Gateway.InMemoryMQ
 {
     public class JT1078MsgChannel
     {
-        public Channel<(string, JT1078.Protocol.JT1078Package)> Channel { get;}
+        public Channel<(string, byte[])> Channel { get;}
 
         public JT1078MsgChannel()
         {
-            Channel = System.Threading.Channels.Channel.CreateUnbounded<(string, JT1078.Protocol.JT1078Package)>();
+            Channel = System.Threading.Channels.Channel.CreateUnbounded<(string, byte[])>();
         }
     }
 }

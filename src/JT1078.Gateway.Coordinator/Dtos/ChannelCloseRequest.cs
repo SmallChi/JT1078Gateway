@@ -10,7 +10,7 @@ namespace JT1078.Gateway.Coordinator.Dtos
         /// <summary>
         /// 设备sim卡号
         /// </summary>
-        public string TerminalPhoneNo { get; set; }
+        public string Sim { get; set; }
         /// <summary>
         /// 通道号
         /// </summary>

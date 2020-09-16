@@ -10,8 +10,8 @@ namespace JT1078.Gateway.Abstractions
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="terminalNo">设备终端号</param>
+        /// <param name="sim">设备sim终端号</param>
         /// <param name="data">jt1078 hex data</param>
-        ValueTask ProduceAsync(string terminalNo, byte[] data);
+        ValueTask ProduceAsync(string sim, byte[] data);
     }
 }

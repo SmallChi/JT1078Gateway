@@ -38,14 +38,14 @@ namespace JT1078.Gateway.Jobs
                     {
                         if (logger.IsEnabled(LogLevel.Information))
                         {
-                            logger.LogInformation($"[Notice]:{notice.TerminalPhoneNo}-{notice.ProtocolType}-{notice.SessionType}");
+                            logger.LogInformation($"[Notice]:{notice.SIM}-{notice.ProtocolType}-{notice.SessionType}");
                         }
                         if(JT1078GatewayConstants.SessionOffline== notice.SessionType)
                         {
                             if (HttpSessionManager != null)
                             {
                                 //当1078设备主动断开的情况下，需要关闭所有再观看的连接
-                                HttpSessionManager.TryRemoveBySim(notice.TerminalPhoneNo);
+                                HttpSessionManager.TryRemoveBySim(notice.SIM);
                             }
                         }
                     }

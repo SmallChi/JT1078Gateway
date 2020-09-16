@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Buffers;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.IO.Pipelines;
 using System.Linq;
 using System.Net;
@@ -10,7 +9,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JT1078.Gateway.Abstractions;
-using JT1078.Gateway.Abstractions.Enums;
 using JT1078.Gateway.Configurations;
 using JT1078.Gateway.Sessions;
 using JT1078.Protocol;
@@ -34,33 +32,7 @@ namespace JT1078.Gateway
 
         private readonly JT1078SessionManager SessionManager;
 
-        private readonly IJT1078PackageProducer jT1078PackageProducer;
-
         private readonly IJT1078MsgProducer jT1078MsgProducer;
-
-        private readonly JT1078UseType jT1078UseType;
-
-        /// <summary>
-        /// 使用正常方式
-        /// </summary>
-        /// <param name="jT1078PackageProducer"></param>
-        /// <param name="jT1078ConfigurationAccessor"></param>
-        /// <param name="loggerFactory"></param>
-        /// <param name="jT1078SessionManager"></param>
-        public JT1078TcpServer(
-                IJT1078PackageProducer jT1078PackageProducer,
-                IOptions<JT1078Configuration> jT1078ConfigurationAccessor,
-                ILoggerFactory loggerFactory,
-                JT1078SessionManager jT1078SessionManager)
-        {
-            SessionManager = jT1078SessionManager;
-            jT1078UseType = JT1078UseType.Normal;
-            Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
-            LogLogger = loggerFactory.CreateLogger("JT1078Logging");
-            Configuration = jT1078ConfigurationAccessor.Value;
-            this.jT1078PackageProducer = jT1078PackageProducer;
-            InitServer();
-        }
 
         /// <summary>
         /// 使用队列方式
@@ -70,15 +42,14 @@ namespace JT1078.Gateway
         /// <param name="loggerFactory"></param>
         /// <param name="jT1078SessionManager"></param>
         public JT1078TcpServer(
-                 IJT1078MsgProducer jT1078MsgProducer,
+                IJT1078MsgProducer jT1078MsgProducer,
                 IOptions<JT1078Configuration> jT1078ConfigurationAccessor,
                 ILoggerFactory loggerFactory,
                 JT1078SessionManager jT1078SessionManager)
         {
             SessionManager = jT1078SessionManager;
-            jT1078UseType = JT1078UseType.Queue;
             Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
-            LogLogger = loggerFactory.CreateLogger("JT1078Logging");
+            LogLogger = loggerFactory.CreateLogger("JT1078.Gateway.JT1078Logging");
             Configuration = jT1078ConfigurationAccessor.Value;
             this.jT1078MsgProducer = jT1078MsgProducer;
             InitServer();
@@ -266,14 +237,7 @@ namespace JT1078.Gateway
                             try
                             {
                                 SessionManager.TryLink(fixedHeaderInfo.SIM, session);
-                                if (jT1078UseType == JT1078UseType.Queue)
-                                {
-                                    jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package1.ToArray());
-                                }
-                                else
-                                {
-                                    jT1078PackageProducer.ProduceAsync(fixedHeaderInfo.SIM, JT1078Serializer.Deserialize(package1));
-                                }
+                                jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package1.ToArray());
                             }
                             catch (Exception ex)
                             {
@@ -307,14 +271,7 @@ namespace JT1078.Gateway
                 try
                 {
                     SessionManager.TryLink(fixedHeaderInfo.SIM, session);
-                    if (jT1078UseType == JT1078UseType.Queue)
-                    {
-                        jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package);
-                    }
-                    else
-                    {
-                        jT1078PackageProducer.ProduceAsync(fixedHeaderInfo.SIM, JT1078Serializer.Deserialize(package));
-                    }
+                    jT1078MsgProducer.ProduceAsync(fixedHeaderInfo.SIM, package);
                 }
                 catch (Exception ex)
                 {

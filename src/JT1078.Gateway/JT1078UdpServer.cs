@@ -1,20 +1,13 @@
 ﻿using System;
 using System.Buffers;
-using System.Buffers.Binary;
-using System.Collections.Generic;
-using System.IO.Pipelines;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using JT1078.Gateway.Abstractions;
-using JT1078.Gateway.Abstractions.Enums;
 using JT1078.Gateway.Configurations;
 using JT1078.Gateway.Sessions;
 using JT1078.Protocol;
-using JT1078.Protocol.Enums;
 using JT1078.Protocol.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -32,32 +25,7 @@ namespace JT1078.Gateway
 
         private readonly JT1078SessionManager SessionManager;
 
-        private readonly IJT1078PackageProducer jT1078PackageProducer;
-
         private readonly IJT1078MsgProducer jT1078MsgProducer;
-
-        private readonly JT1078UseType jT1078UseType;
-
-        /// <summary>
-        /// 使用正常方式
-        /// </summary>
-        /// <param name="jT1078PackageProducer"></param>
-        /// <param name="jT1078ConfigurationAccessor"></param>
-        /// <param name="loggerFactory"></param>
-        /// <param name="jT1078SessionManager"></param>
-        public JT1078UdpServer(
-                IJT1078PackageProducer jT1078PackageProducer,
-                IOptions<JT1078Configuration> jT1078ConfigurationAccessor,
-                ILoggerFactory loggerFactory,
-                JT1078SessionManager jT1078SessionManager)
-        {
-            SessionManager = jT1078SessionManager;
-            jT1078UseType = JT1078UseType.Normal;
-            Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
-            Configuration = jT1078ConfigurationAccessor.Value;
-            this.jT1078PackageProducer = jT1078PackageProducer;
-            InitServer();
-        }
 
         /// <summary>
         /// 使用队列方式
@@ -73,7 +41,6 @@ namespace JT1078.Gateway
                 JT1078SessionManager jT1078SessionManager)
         {
             SessionManager = jT1078SessionManager;
-            jT1078UseType = JT1078UseType.Queue;
             Logger = loggerFactory.CreateLogger<JT1078UdpServer>();
             Configuration = jT1078ConfigurationAccessor.Value;
             this.jT1078MsgProducer = jT1078MsgProducer;
@@ -134,14 +101,7 @@ namespace JT1078.Gateway
                 {
                     Logger.LogInformation($"[Connected]:{receiveMessageFromResult.RemoteEndPoint}");
                 }
-                if (jT1078UseType == JT1078UseType.Queue)
-                {
-                    jT1078MsgProducer.ProduceAsync(package.SIM, buffer.ToArray());
-                }
-                else
-                {
-                    jT1078PackageProducer.ProduceAsync(package.SIM, package);
-                }
+                jT1078MsgProducer.ProduceAsync(package.SIM, buffer.ToArray());
             }
             catch (NotImplementedException ex)
             {

@@ -16,8 +16,6 @@ namespace JT1078.Gateway.Coordinator.Controller
     [EnableCors("any")]
     public class UserController : ControllerBase
     {
-
-
         /// <summary>
         /// 登录
         /// </summary>

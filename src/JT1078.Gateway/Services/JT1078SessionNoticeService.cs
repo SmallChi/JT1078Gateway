@@ -7,10 +7,10 @@ namespace JT1078.Gateway.Services
 {
     public class JT1078SessionNoticeService
     {
-        public BlockingCollection<(string SessionType, string TerminalPhoneNo,string ProtocolType)> SessionNoticeBlockingCollection { get;internal set; }
+        public BlockingCollection<(string SessionType, string SIM,string ProtocolType)> SessionNoticeBlockingCollection { get;internal set; }
         public JT1078SessionNoticeService()
         {
-            SessionNoticeBlockingCollection = new BlockingCollection<(string SessionType, string TerminalPhoneNo, string ProtocolType)>();
+            SessionNoticeBlockingCollection = new BlockingCollection<(string SessionType, string SIM, string ProtocolType)>();
         }
     }
 }

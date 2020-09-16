@@ -7,7 +7,7 @@ namespace JT1078.Gateway.Abstractions
 {
     public interface IJT1078MsgConsumer : IJT1078PubSub, IDisposable
     {
-        void OnMessage(Action<(string TerminalNo, byte[] Data)> callback);
+        void OnMessage(Action<(string SIM, byte[] Data)> callback);
         CancellationTokenSource Cts { get; }
         void Subscribe();
         void Unsubscribe();

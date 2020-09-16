@@ -39,7 +39,7 @@ namespace JT1078.Gateway.TestNormalHosting
                     services.AddSingleton<TSEncoder>();
                     services.AddSingleton(new M3U8Option 
                     { 
-
+                        
                     });
                     services.AddSingleton<M3U8FileManage>();
                     //使用内存队列实现会话通知
@@ -48,9 +48,9 @@ namespace JT1078.Gateway.TestNormalHosting
                             .AddUdp()
                             .AddHttp()
                             //.AddCoordinatorHttpClient()
-                            .AddNormal()
                             .AddMsgProducer()
                             .AddMsgConsumer();
+                    //内存队列没有做分发，可以自己实现。
                     services.AddHostedService<JT1078FlvNormalMsgHostedService>();
                     //services.AddHostedService<JT1078HlsNormalMsgHostedService>();
                 });

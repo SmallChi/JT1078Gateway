@@ -19,7 +19,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
 {
     public class JT1078FlvNormalMsgHostedService : BackgroundService
     {
-        private IJT1078PackageConsumer PackageConsumer;
+        private IJT1078MsgConsumer JT1078MsgConsumer;
         private JT1078HttpSessionManager HttpSessionManager;
         private FlvEncoder FlvEncoder;
         private ILogger Logger;
@@ -31,74 +31,73 @@ namespace JT1078.Gateway.TestNormalHosting.Services
             ILoggerFactory loggerFactory,
             FlvEncoder flvEncoder,
             JT1078HttpSessionManager httpSessionManager,
-            IJT1078PackageConsumer packageConsumer)
+            IJT1078MsgConsumer msgConsumer)
         {
             Logger = loggerFactory.CreateLogger<JT1078FlvNormalMsgHostedService>();
-            PackageConsumer = packageConsumer;
+            JT1078MsgConsumer = msgConsumer;
             HttpSessionManager = httpSessionManager;
             FlvEncoder = flvEncoder;
             this.memoryCache = memoryCache;
         }
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            PackageConsumer.OnMessage((Message) =>
+            JT1078MsgConsumer.OnMessage((Message) =>
             {
+                JT1078Package package = JT1078Serializer.Deserialize(Message.Data);
+                if (Logger.IsEnabled(LogLevel.Debug))
+                {
+                    Logger.LogDebug(JsonSerializer.Serialize(HttpSessionManager.GetAll()));
+                    Logger.LogDebug($"{package.SIM},{package.SN},{package.LogicChannelNumber},{package.Label3.DataType.ToString()},{package.Label3.SubpackageType.ToString()},{package.Bodies.ToHexString()}");
+                }
                 try
                 {
-                    if (Logger.IsEnabled(LogLevel.Debug))
+                    var merge = JT1078Serializer.Merge(package);
+                    if (merge == null) return;
+                    string key = $"{package.GetKey()}_{ikey}";
+                    if (merge.Label3.DataType == Protocol.Enums.JT1078DataType.视频I帧)
                     {
-                        Logger.LogDebug(JsonSerializer.Serialize(HttpSessionManager.GetAll()));
-                        Logger.LogDebug($"{Message.Data.SIM},{Message.Data.SN},{Message.Data.LogicChannelNumber},{Message.Data.Label3.DataType.ToString()},{Message.Data.Label3.SubpackageType.ToString()},{Message.Data.Bodies.ToHexString()}");
+                        memoryCache.Set(key, merge);
                     }
-                    var merge = JT1078.Protocol.JT1078Serializer.Merge(Message.Data);
-                    string key = $"{Message.Data.GetKey()}_{ikey}";
-                    if (merge != null)
+                    var httpSessions = HttpSessionManager.GetAllBySimAndChannelNo(package.SIM.TrimStart('0'), package.LogicChannelNumber);
+                    var firstHttpSessions = httpSessions.Where(w => !w.FirstSend).ToList();
+                    if (firstHttpSessions.Count > 0)
                     {
-                        if (merge.Label3.DataType == Protocol.Enums.JT1078DataType.视频I帧)
-                        {
-                            memoryCache.Set(key, merge);
-                        }
-                        var httpSessions = HttpSessionManager.GetAllBySimAndChannelNo(Message.Data.SIM.TrimStart('0'), Message.Data.LogicChannelNumber);
-                        var firstHttpSessions = httpSessions.Where(w => !w.FirstSend).ToList();
-                        if (firstHttpSessions.Count > 0)
-                        {
-                            if (memoryCache.TryGetValue(key, out JT1078Package idata))
-                            {
-                                try
-                                {
-                                    var flvVideoBuffer = FlvEncoder.EncoderVideoTag(idata, true);
-                                    foreach (var session in firstHttpSessions)
-                                    {
-                                        HttpSessionManager.SendAVData(session, flvVideoBuffer, true);
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Logger.LogError(ex, $"{Message.Data.SIM},{true},{Message.Data.SN},{Message.Data.LogicChannelNumber},{Message.Data.Label3.DataType.ToString()},{Message.Data.Label3.SubpackageType.ToString()},{Message.Data.Bodies.ToHexString()}");
-                                }
-                            }
-                        }
-                        var otherHttpSessions = httpSessions.Where(w => w.FirstSend).ToList();
-                        if (otherHttpSessions.Count > 0)
+                        if (memoryCache.TryGetValue(key, out JT1078Package idata))
                         {
                             try
                             {
-                                var flvVideoBuffer = FlvEncoder.EncoderVideoTag(merge, false);
-                                foreach (var session in otherHttpSessions)
+                                var flvVideoBuffer = FlvEncoder.EncoderVideoTag(idata, true);
+                                foreach (var session in firstHttpSessions)
                                 {
-                                    HttpSessionManager.SendAVData(session, flvVideoBuffer, false);
+                                    HttpSessionManager.SendAVData(session, flvVideoBuffer, true);
                                 }
                             }
                             catch (Exception ex)
                             {
-                                Logger.LogError(ex, $"{Message.Data.SIM},{false},{Message.Data.SN},{Message.Data.LogicChannelNumber},{Message.Data.Label3.DataType.ToString()},{Message.Data.Label3.SubpackageType.ToString()},{Message.Data.Bodies.ToHexString()}");
+                                Logger.LogError(ex, $"{package.SIM},{true},{package.SN},{package.LogicChannelNumber},{package.Label3.DataType.ToString()},{package.Label3.SubpackageType.ToString()},{package.Bodies.ToHexString()}");
                             }
+                        }
+                    }
+                    var otherHttpSessions = httpSessions.Where(w => w.FirstSend).ToList();
+                    if (otherHttpSessions.Count > 0)
+                    {
+                        try
+                        {
+                            var flvVideoBuffer = FlvEncoder.EncoderVideoTag(merge, false);
+                            foreach (var session in otherHttpSessions)
+                            {
+                                HttpSessionManager.SendAVData(session, flvVideoBuffer, false);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(ex, $"{package.SIM},{false},{package.SN},{package.LogicChannelNumber},{package.Label3.DataType.ToString()},{package.Label3.SubpackageType.ToString()},{package.Bodies.ToHexString()}");
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, $"{Message.Data.SIM},{Message.Data.SN},{Message.Data.LogicChannelNumber},{Message.Data.Label3.DataType.ToString()},{Message.Data.Label3.SubpackageType.ToString()},{Message.Data.Bodies.ToHexString()}");
+                    Logger.LogError(ex, $"{package.SIM},{package.SN},{package.LogicChannelNumber},{package.Label3.DataType.ToString()},{package.Label3.SubpackageType.ToString()},{package.Bodies.ToHexString()}");
                 }
             });
             return Task.CompletedTask;

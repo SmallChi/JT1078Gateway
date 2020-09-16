@@ -66,22 +66,12 @@ namespace JT1078.Gateway
             builder.JT1078Builder.Services.AddHostedService<JT1078HttpServer>();
             return builder;
         }
-
+        
         public static IJT1078GatewayBuilder AddCoordinatorHttpClient(this IJT1078GatewayBuilder builder)
         {
             builder.JT1078Builder.Services.AddSingleton<JT1078CoordinatorHttpClient>();
             builder.JT1078Builder.Services.AddHostedService<JT1078HeartbeatJob>();
             return builder;
-        }
-
-        public static IJT1078NormalGatewayBuilder AddNormal(this IJT1078GatewayBuilder builder)
-        {
-            return new JT1078NormalGatewayBuilderDefault(builder.JT1078Builder);
-        }
-
-        public static IJT1078QueueGatewayBuilder AddQueue(this IJT1078GatewayBuilder builder)
-        {
-            return new JT1078QueueGatewayBuilderDefault(builder.JT1078Builder);
         }
 
         internal static IJT1078GatewayBuilder AddJT1078Core(this IJT1078GatewayBuilder builder)

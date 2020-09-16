@@ -12,6 +12,7 @@ using JT1078.Protocol.Enums;
 using System.Linq;
 using System.Text;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace JT1078.Gateway.Test
 {
@@ -355,7 +356,7 @@ namespace JT1078.Gateway.Test
                 if (seqReader.End) break;
             }
 
-        }   
+        }
 
         [Fact]
         public void Test2()

@@ -5,6 +5,7 @@ using System.IO.Pipelines;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,8 @@ namespace JT1078.Gateway
         private readonly JT1078SessionManager SessionManager;
 
         private readonly IJT1078MsgProducer jT1078MsgProducer;
+
+        private readonly JT1078UseType jT1078UseType;
 
         /// <summary>
         /// 使用队列方式
@@ -175,11 +178,13 @@ namespace JT1078.Gateway
         }
         private void ReaderBuffer(ref ReadOnlySequence<byte> buffer, FixedHeaderInfo fixedHeaderInfo, JT1078TcpSession session, out SequencePosition consumed, out SequencePosition examined)
         {
+            consumed = buffer.Start;
+            examined = buffer.End;
             SequenceReader<byte> seqReader = new SequenceReader<byte>(buffer);
             long totalConsumed = 0;
             while (!seqReader.End)
             {
-                if (seqReader.Remaining < 30)
+                if (seqReader.Length < 30)
                 {
                     fixedHeaderInfo.Reset();
                     break;
@@ -187,39 +192,24 @@ namespace JT1078.Gateway
                 if (!fixedHeaderInfo.FoundHeader)
                 {
                     var header = seqReader.Sequence.Slice(0, 4);
-                    var headerValue = BinaryPrimitives.ReadUInt32BigEndian(header.FirstSpan);
+                    uint headerValue = BinaryPrimitives.ReadUInt32BigEndian(header.ToArray());
                     if (JT1078Package.FH == headerValue)
                     {
                         //sim
-                        fixedHeaderInfo.SIM = ReadBCD(seqReader.Sequence.Slice(8, 6).FirstSpan, 12);
                         if (string.IsNullOrEmpty(fixedHeaderInfo.SIM))
                         {
-                            fixedHeaderInfo.SIM = session.SessionID;
+                            fixedHeaderInfo.SIM = ReadBCD(seqReader.Sequence.Slice(8, 6).ToArray(), 12);
+                            fixedHeaderInfo.SIM = fixedHeaderInfo.SIM ?? session.SessionID;
                         }
                         //根据数据类型处理对应的数据长度
                         fixedHeaderInfo.TotalSize += 15;
                         var dataType = seqReader.Sequence.Slice(fixedHeaderInfo.TotalSize, 1).FirstSpan[0];
                         fixedHeaderInfo.TotalSize += 1;
-                        JT1078Label3 label3 = new JT1078Label3(dataType);
-                        int bodyLength = 0;
-                        //透传的时候没有该字段
-                        if (label3.DataType != JT1078DataType.透传数据)
-                        {
-                            //时间戳
-                            bodyLength += 8;
-                        }
-                        //非视频帧时没有该字段
-                        if (label3.DataType == JT1078DataType.视频I帧 ||
-                            label3.DataType == JT1078DataType.视频P帧 ||
-                            label3.DataType == JT1078DataType.视频B帧)
-                        {
-                            //上一个关键帧 + 上一帧 = 2 + 2
-                            bodyLength += 4;
-                        }
+                        int bodyLength = GetRealDataBodyLength(dataType);
                         fixedHeaderInfo.TotalSize += bodyLength;
-                        var bodyLengthFirstSpan = seqReader.Sequence.Slice(fixedHeaderInfo.TotalSize, 2).FirstSpan;
-                        //数据体长度
+                        var bodyLengthFirstSpan = seqReader.Sequence.Slice(fixedHeaderInfo.TotalSize, 2).ToArray();
                         fixedHeaderInfo.TotalSize += 2;
+                        //数据体长度
                         bodyLength = BinaryPrimitives.ReadUInt16BigEndian(bodyLengthFirstSpan);
                         if (bodyLength < 0)
                         {
@@ -228,8 +218,8 @@ namespace JT1078.Gateway
                         }
                         if (bodyLength == 0)//数据体长度为0
                         {
-                            seqReader.Advance(fixedHeaderInfo.TotalSize);
                             var package1 = seqReader.Sequence.Slice(0, fixedHeaderInfo.TotalSize).ToArray();
+                            seqReader.Advance(fixedHeaderInfo.TotalSize);
                             if (LogLogger.IsEnabled(LogLevel.Trace))
                             {
                                 LogLogger.LogTrace($"{package1.ToHexString()}");
@@ -247,7 +237,11 @@ namespace JT1078.Gateway
                             finally
                             {
                                 totalConsumed += seqReader.Consumed;
+                                seqReader = new SequenceReader<byte>(seqReader.Sequence.Slice(fixedHeaderInfo.TotalSize));
                                 fixedHeaderInfo.Reset();
+#if DEBUG
+                                Interlocked.Increment(ref Counter);
+#endif
                             }
                             continue;
                         }
@@ -261,12 +255,12 @@ namespace JT1078.Gateway
                         throw new ArgumentException("not JT1078 package.");
                     }
                 }
-                if ((seqReader.Remaining - fixedHeaderInfo.TotalSize) < 0) break;
-                seqReader.Advance(fixedHeaderInfo.TotalSize);
+                if ((seqReader.Length - fixedHeaderInfo.TotalSize) < 0) break;
                 var package = seqReader.Sequence.Slice(0, fixedHeaderInfo.TotalSize).ToArray();
+                seqReader.Advance(fixedHeaderInfo.TotalSize);
                 if (LogLogger.IsEnabled(LogLevel.Trace))
                 {
-                    LogLogger.LogTrace($"{package.ToHexString()}");
+                    LogLogger.LogTrace($"===>{package.ToHexString()}");
                 }
                 try
                 {
@@ -281,9 +275,18 @@ namespace JT1078.Gateway
                 finally
                 {
                     totalConsumed += seqReader.Consumed;
+                    seqReader = new SequenceReader<byte>(seqReader.Sequence.Slice(fixedHeaderInfo.TotalSize));
                     fixedHeaderInfo.Reset();
-                    seqReader = new SequenceReader<byte>(seqReader.Sequence.Slice(seqReader.Consumed));
+#if DEBUG
+                    Interlocked.Increment(ref Counter);
+#endif
                 }
+#if DEBUG
+                if (Logger.IsEnabled(LogLevel.Trace))
+                {
+                    Logger.LogTrace($"======>{Counter}");
+                }
+#endif
             }
             if (seqReader.End)
             {
@@ -292,7 +295,6 @@ namespace JT1078.Gateway
             else
             {
                 consumed = buffer.GetPosition(totalConsumed);
-                examined = buffer.End;
             }
         }
         public Task StopAsync(CancellationToken cancellationToken)
@@ -324,7 +326,26 @@ namespace JT1078.Gateway
             }
             return bcdSb.ToString().TrimStart('0');
         }
-
+        int GetRealDataBodyLength(byte dataType)
+        {
+            JT1078Label3 label3 = new JT1078Label3(dataType);
+            int bodyLength = 0;
+            //透传的时候没有该字段
+            if (label3.DataType != JT1078DataType.透传数据)
+            {
+                //时间戳
+                bodyLength += 8;
+            }
+            //非视频帧时没有该字段
+            if (label3.DataType == JT1078DataType.视频I帧 ||
+                label3.DataType == JT1078DataType.视频P帧 ||
+                label3.DataType == JT1078DataType.视频B帧)
+            {
+                //上一个关键帧 + 上一帧 = 2 + 2
+                bodyLength += 4;
+            }
+            return bodyLength;
+        }
         class FixedHeaderInfo
         {
             public bool FoundHeader { get; set; }

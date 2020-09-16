@@ -35,7 +35,7 @@ namespace JT1078.Gateway
 
         private readonly IJT1078MsgProducer jT1078MsgProducer;
 
-        private readonly JT1078UseType jT1078UseType;
+        private long Counter = 0;
 
         /// <summary>
         /// 使用队列方式

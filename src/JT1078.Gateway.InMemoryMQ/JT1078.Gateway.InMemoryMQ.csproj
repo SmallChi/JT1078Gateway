@@ -23,7 +23,9 @@
   <ItemGroup>
     <PackageReference Include="System.Threading.Channels" Version="4.7.1" />
   </ItemGroup>
-
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\JT1078.Gateway.Abstractions\JT1078.Gateway.Abstractions.csproj" />
   </ItemGroup>

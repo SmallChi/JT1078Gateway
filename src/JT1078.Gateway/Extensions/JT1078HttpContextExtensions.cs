@@ -14,6 +14,8 @@ namespace JT1078.Gateway.Extensions
         public static async ValueTask Http401(this HttpListenerContext context)
         {
             byte[] b = Encoding.UTF8.GetBytes("auth error");
+            context.Response.AddHeader("Access-Control-Allow-Headers", "*");
+            context.Response.AppendHeader("Access-Control-Allow-Origin", "*");
             context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
             context.Response.KeepAlive = false;
             context.Response.ContentLength64 = b.Length;
@@ -26,6 +28,8 @@ namespace JT1078.Gateway.Extensions
         public static async ValueTask Http400(this HttpListenerContext context)
         {
             byte[] b = Encoding.UTF8.GetBytes($"sim and channel parameter required.");
+            context.Response.AddHeader("Access-Control-Allow-Headers", "*");
+            context.Response.AppendHeader("Access-Control-Allow-Origin", "*");
             context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
             context.Response.KeepAlive = false;
             context.Response.ContentLength64 = b.Length;
@@ -37,6 +41,8 @@ namespace JT1078.Gateway.Extensions
 
         public static void Http404(this HttpListenerContext context)
         {
+            context.Response.AddHeader("Access-Control-Allow-Headers", "*");
+            context.Response.AppendHeader("Access-Control-Allow-Origin", "*");
             context.Response.StatusCode = (int)HttpStatusCode.NotFound;
             context.Response.KeepAlive = false;
             context.Response.OutputStream.Close();
@@ -46,6 +52,8 @@ namespace JT1078.Gateway.Extensions
         public static async ValueTask Http500(this HttpListenerContext context)
         {
             byte[] b = Encoding.UTF8.GetBytes("inner error");
+            context.Response.AddHeader("Access-Control-Allow-Headers", "*");
+            context.Response.AppendHeader("Access-Control-Allow-Origin", "*");
             context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
             context.Response.KeepAlive = false;
             context.Response.ContentLength64 = b.Length;
@@ -57,6 +65,8 @@ namespace JT1078.Gateway.Extensions
 
         public static async ValueTask HttpSendFirstChunked(this JT1078HttpContext context, ReadOnlyMemory<byte> buffer)
         {
+            context.Context.Response.AddHeader("Access-Control-Allow-Headers", "*");
+            context.Context.Response.AppendHeader("Access-Control-Allow-Origin", "*");
             context.Context.Response.StatusCode = (int)HttpStatusCode.OK;
             context.Context.Response.SendChunked = true;
             await context.Context.Response.OutputStream.WriteAsync(buffer);
@@ -71,6 +81,8 @@ namespace JT1078.Gateway.Extensions
         public static async ValueTask HttpClose(this JT1078HttpContext context)
         {
             byte[] b = Encoding.UTF8.GetBytes("close");
+            context.Context.Response.AddHeader("Access-Control-Allow-Headers", "*");
+            context.Context.Response.AppendHeader("Access-Control-Allow-Origin", "*");
             context.Context.Response.StatusCode = (int)HttpStatusCode.OK;
             context.Context.Response.KeepAlive = false;
             context.Context.Response.ContentLength64 = b.Length;

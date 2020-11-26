@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>JT1078.Gateway.Abstractions</name>
+    </assembly>
+    <members>
+        <member name="T:JT1078.Gateway.Abstractions.Enums.JT1078TransportProtocolType">
+            <summary>
+            传输协议类型
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.Abstractions.IJT1078MsgProducer.ProduceAsync(System.String,System.Byte[])">
+            <summary>
+            
+            </summary>
+            <param name="sim">设备sim终端号</param>
+            <param name="data">jt1078 hex data</param>
+        </member>
+        <member name="P:JT1078.Gateway.Abstractions.IJT1078Session.TerminalPhoneNo">
+            <summary>
+            终端手机号
+            </summary>
+        </member>
+    </members>
+</doc>

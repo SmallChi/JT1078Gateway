@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>JT1078.Gateway</name>
+    </assembly>
+    <members>
+        <member name="P:JT1078.Gateway.Configurations.JT1078Configuration.TcpReaderIdleTimeSeconds">
+            <summary>
+            Tcp读超时 
+            默认10分钟检查一次
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Configurations.JT1078Configuration.TcpReceiveTimeoutCheckTimeSeconds">
+            <summary>
+            Tcp 60s检查一次
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Configurations.JT1078Configuration.UdpReaderIdleTimeSeconds">
+            <summary>
+            Udp读超时
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Configurations.JT1078Configuration.UdpReceiveTimeoutCheckTimeSeconds">
+            <summary>
+            Udp 60s检查一次
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Configurations.JT1078Configuration.HlsRootDirectory">
+            <summary>
+            Hls根目录
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Configurations.JT1078Configuration.CoordinatorHeartbeatTimeSeconds">
+            <summary>
+            协调器发送心跳时间
+            默认60s发送一次
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Configurations.JT1078Configuration.CoordinatorUri">
+            <summary>
+            协调器Coordinator主机
+            http://localhost/
+            http://127.0.0.1/
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Configurations.JT1078Configuration.CoordinatorUserName">
+            <summary>
+            协调器Coordinator主机登录账号
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Configurations.JT1078Configuration.CoordinatorPassword">
+            <summary>
+            协调器Coordinator主机登录密码
+            </summary>
+        </member>
+        <member name="T:JT1078.Gateway.JT1078CoordinatorHttpClient">
+            <summary>
+            协调器客户端
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.JT1078CoordinatorHttpClient.Login">
+            <summary>
+            登录
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.JT1078CoordinatorHttpClient.Reset">
+            <summary>
+            发送重制至协调器中
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.JT1078CoordinatorHttpClient.Heartbeat(System.String)">
+            <summary>
+            发送心跳至协调器中
+            </summary>
+            <param name="content"></param>
+        </member>
+        <member name="M:JT1078.Gateway.JT1078CoordinatorHttpClient.ChannelClose(System.String,System.Int32)">
+            <summary>
+            发送设备号和通道给协调器中
+            </summary>
+            <param name="terminalPhoneNo"></param>
+            <param name="channelNo"></param>
+        </member>
+        <member name="M:JT1078.Gateway.JT1078TcpServer.#ctor(JT1078.Gateway.Abstractions.IJT1078MsgProducer,Microsoft.Extensions.Options.IOptions{JT1078.Gateway.Configurations.JT1078Configuration},Microsoft.Extensions.Logging.ILoggerFactory,JT1078.Gateway.Sessions.JT1078SessionManager)">
+            <summary>
+            使用队列方式
+            </summary>
+            <param name="jT1078MsgProducer"></param>
+            <param name="jT1078ConfigurationAccessor"></param>
+            <param name="loggerFactory"></param>
+            <param name="jT1078SessionManager"></param>
+        </member>
+        <member name="M:JT1078.Gateway.JT1078UdpServer.#ctor(JT1078.Gateway.Abstractions.IJT1078MsgProducer,Microsoft.Extensions.Options.IOptions{JT1078.Gateway.Configurations.JT1078Configuration},Microsoft.Extensions.Logging.ILoggerFactory,JT1078.Gateway.Sessions.JT1078SessionManager)">
+            <summary>
+            使用队列方式
+            </summary>
+            <param name="jT1078MsgProducer"></param>
+            <param name="jT1078ConfigurationAccessor"></param>
+            <param name="loggerFactory"></param>
+            <param name="jT1078SessionManager"></param>
+        </member>
+        <member name="M:JT1078.Gateway.Sessions.JT1078HttpSessionManager.SendAVData(JT1078.Gateway.Metadata.JT1078HttpContext,System.Byte[],System.Boolean)">
+            <summary>
+            发送音视频数据
+            </summary>
+            <param name="httpContext"></param>
+            <param name="data"></param>
+            <param name="firstSend"></param>
+        </member>
+        <member name="T:JT1078.Gateway.Sessions.JT1078SessionManager">
+            <summary>
+            
+            <remark>不支持变态类型:既发TCP和UDP</remark>
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Sessions.JT1078TcpSession.TerminalPhoneNo">
+            <summary>
+            终端手机号
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Sessions.JT1078UdpSession.TerminalPhoneNo">
+            <summary>
+            终端手机号
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog.Extensions.Logging;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace JT1078.Gateway.TestNormalHosting
@@ -33,6 +34,8 @@ namespace JT1078.Gateway.TestNormalHosting
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddMemoryCache();
+                    services.AddScoped<FileSystemWatcher>();
+                    services.AddSingleton<HLSRequestManager>();
                     services.AddSingleton<ILoggerFactory, LoggerFactory>();
                     services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
                     services.AddSingleton<FlvEncoder>();

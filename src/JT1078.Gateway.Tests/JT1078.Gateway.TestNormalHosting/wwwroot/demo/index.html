@@ -1,0 +1,34 @@
+<html>
+<head></head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<!-- Or if you want a more recent alpha version -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/hls.js@alpha"></script> -->
+<!-- video:play() failed because the user didn't interact with the document first  //https://www.jianshu.com/p/06179ca12dfa -->
+<video autoplay muted  id="video"></video>
+<script>
+  var video = document.getElementById('video');
+  var videoSrc = 'demo.m3u8'; 
+  //
+  // First check for native browser HLS support
+  //
+  if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = videoSrc;
+    video.addEventListener('loadedmetadata', function() {
+      video.play();
+    });
+  //
+  // If no native HLS support, check if hls.js is supported
+  //
+  } else if (Hls.isSupported()) {
+    var hls = new Hls();
+    hls.loadSource(videoSrc);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, function() {
+      video.play();
+    });
+  }
+</script>
+</body>
+</html>
+

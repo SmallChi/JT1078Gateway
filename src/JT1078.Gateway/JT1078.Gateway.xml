@@ -53,6 +53,18 @@
             协调器Coordinator主机登录密码
             </summary>
         </member>
+        <member name="T:JT1078.Gateway.HLSRequestManager">
+            <summary>
+            Hls请求管理
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.HLSRequestManager.HandleHlsRequest(System.Net.HttpListenerContext,System.Security.Principal.IPrincipal)">
+            <summary>
+            处理hls实时视频请求
+            </summary>
+            <param name="context"></param>
+            <param name="principal"></param>
+        </member>
         <member name="T:JT1078.Gateway.JT1078CoordinatorHttpClient">
             <summary>
             协调器客户端

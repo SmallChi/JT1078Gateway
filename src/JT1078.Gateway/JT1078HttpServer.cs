@@ -28,24 +28,24 @@ namespace JT1078.Gateway
 
         private readonly IJT1078Authorization authorization;
 
-        private IMemoryCache memoryCache;
-
         private HttpListener listener;
 
         private JT1078HttpSessionManager SessionManager;
+        private readonly HLSRequestManager hLSRequestManager;
+        private FileSystemWatcher watcher;
 
         public JT1078HttpServer(
-            IMemoryCache memoryCache,
             IOptions<JT1078Configuration> jT1078ConfigurationAccessor,
             IJT1078Authorization authorization,
             JT1078HttpSessionManager sessionManager,
+            HLSRequestManager hLSRequestManager,
             ILoggerFactory loggerFactory)
         {
             Logger = loggerFactory.CreateLogger<JT1078TcpServer>();
             Configuration = jT1078ConfigurationAccessor.Value;
             this.authorization = authorization;
             this.SessionManager = sessionManager;
-            this.memoryCache = memoryCache;
+            this.hLSRequestManager = hLSRequestManager;
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -74,14 +74,18 @@ namespace JT1078.Gateway
                     var context = await listener.GetContextAsync();
                     try
                     {
-                        if (authorization.Authorization(context,out var principal))
+                       await Task.Run(async () =>
                         {
-                            await ProcessRequestAsync(context, principal);
-                        }
-                        else
-                        {
-                            await context.Http401();
-                        }
+                            IPrincipal principal=null;
+                            if (context.Request.RawUrl.Contains(".ts")||authorization.Authorization(context, out principal))
+                            {
+                                await ProcessRequestAsync(context, principal);
+                            }
+                            else
+                            {
+                                await context.Http401();
+                            }
+                        });
                     }
                     catch (Exception ex)
                     {
@@ -93,9 +97,6 @@ namespace JT1078.Gateway
             return Task.CompletedTask;
         }
 
-        private const string m3u8Mime = "application/x-mpegURL";
-        private const string tsMime = "video/MP2T";
-
         private async ValueTask ProcessRequestAsync(HttpListenerContext context, IPrincipal principal)
         {
             if(context.Request.RawUrl.StartsWith("/favicon.ico"))
@@ -103,60 +104,14 @@ namespace JT1078.Gateway
                 context.Http404();
                 return;
             }
-            if (context.Request.RawUrl.EndsWith(".m3u8") || context.Request.RawUrl.EndsWith(".ts"))
+            if (context.Request.RawUrl.Contains(".m3u8") || context.Request.RawUrl.Contains(".ts"))
             {
-                var uri = new Uri(context.Request.RawUrl);
-                string url = uri.AbsolutePath;
-                var queryParams = uri.Query.Substring(1, uri.Query.Length - 1).Split('&');
-                if (queryParams.Length < 2)
-                {
-                    context.Http404();
-                    return;
-                }
-                string key = $"{queryParams[0].Split('=')[1]}_{queryParams[1].Split('=')[1]}";//默认queryParams第一个参数是终端号，第二个参数是通道号
-                memoryCache.GetOrCreate(key, (cacheEntry) => {
-                    cacheEntry.SetSlidingExpiration(TimeSpan.FromSeconds(20));
-                    cacheEntry.RegisterPostEvictionCallback((key, value, reason, state) => {
-                        //当清空httpssion时，同时清除tcpsseion
-                    });
-                    return DateTime.Now;
-                });
-                string filename = Path.GetFileName(url);
-                string filepath = Path.Combine(Configuration.HlsRootDirectory, key, filename);
-                if (!File.Exists(filepath))
-                {
-                    context.Http404();
-                    return; 
-                }
-                try
-                {
-                    using (FileStream sr = new FileStream(filepath, FileMode.Open))
-                    {
-                        context.Response.ContentLength64 = sr.Length;
-                        await sr.CopyToAsync(context.Response.OutputStream);
-                    }
-                    string ext = Path.GetExtension(filename);
-                    if (ext == ".m3u8")
-                    {
-                        context.Response.ContentType = m3u8Mime;
-                    }
-                    else if (ext == ".ts")
-                    {
-                        context.Response.ContentType = tsMime;
-                    }
-                    context.Response.StatusCode = (int)HttpStatusCode.OK;
-                }
-                catch (Exception ex)
-                {
-                    Logger.LogError(ex, $"{context.Request.RawUrl}");
-                    context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                }
-                finally
-                {
-                    context.Response.OutputStream.Close();
-                    context.Response.Close();
-                }
+                hLSRequestManager.HandleHlsRequest(context, principal);
                 return;
+            }
+            if (Logger.IsEnabled(LogLevel.Trace))
+            {
+                Logger.LogTrace($"[http RequestTraceIdentifier]:{context.Request.RequestTraceIdentifier.ToString()}-{context.Request.RemoteEndPoint.ToString()}");
             }
             if (Logger.IsEnabled(LogLevel.Trace))
             {

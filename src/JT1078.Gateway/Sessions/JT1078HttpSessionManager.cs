@@ -25,7 +25,19 @@ namespace JT1078.Gateway.Sessions
 
         public bool TryAdd(JT1078HttpContext  httpContext)
         {
+     
             return Sessions.TryAdd(httpContext.SessionId, httpContext);
+        }
+
+        public void AddOrUpdate(JT1078HttpContext httpContext) {
+            var session = Sessions.FirstOrDefault(m => m.Value.Sim == httpContext.Sim && m.Value.ChannelNo == httpContext.ChannelNo);
+            if (string.IsNullOrEmpty(session.Key))
+            {
+                Sessions.TryAdd(httpContext.SessionId, httpContext);
+            }
+            else {
+                Sessions.TryUpdate(session.Key, httpContext, session.Value);
+            }
         }
 
         public async void TryRemove(string sessionId)

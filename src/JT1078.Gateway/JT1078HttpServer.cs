@@ -131,6 +131,7 @@ namespace JT1078.Gateway
                 var jT1078HttpContext = new JT1078HttpContext(context, wsContext,principal);
                 jT1078HttpContext.Sim = sim;
                 jT1078HttpContext.ChannelNo = channelNo;
+                jT1078HttpContext.RTPVideoType = RTPVideoType.Ws_Flv;
                 SessionManager.TryAdd(jT1078HttpContext);
                 //这个发送出去，flv.js就报错了
                 //await jT1078HttpContext.WebSocketSendHelloAsync();
@@ -176,6 +177,7 @@ namespace JT1078.Gateway
             {
                 var jT1078HttpContext = new JT1078HttpContext(context,principal);
                 jT1078HttpContext.Sim = sim;
+                jT1078HttpContext.RTPVideoType = RTPVideoType.Http_Flv;
                 jT1078HttpContext.ChannelNo = channelNo;
                 SessionManager.TryAdd(jT1078HttpContext);
             }

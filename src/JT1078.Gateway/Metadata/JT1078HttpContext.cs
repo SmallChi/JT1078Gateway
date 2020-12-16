@@ -16,6 +16,7 @@ namespace JT1078.Gateway.Metadata
         [JsonIgnore]
         public HttpListenerWebSocketContext WebSocketContext { get; }
         public IPrincipal User { get; }
+        public RTPVideoType RTPVideoType { get; set; }
         public string Sim { get; set; }
         public int ChannelNo { get; set; }
         public bool IsWebSocket
@@ -44,5 +45,11 @@ namespace JT1078.Gateway.Metadata
             SessionId = Guid.NewGuid().ToString("N");
             FirstSend = false;
         }
+    }
+    public enum RTPVideoType
+    {
+        Http_Flv,
+        Ws_Flv,
+        Http_Hls,
     }
 }

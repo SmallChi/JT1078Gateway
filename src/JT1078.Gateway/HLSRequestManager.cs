@@ -8,9 +8,12 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Security.Principal;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace JT1078.Gateway
 {
@@ -42,6 +45,21 @@ namespace JT1078.Gateway
             SessionManager = sessionManager;
             Configuration = jT1078ConfigurationAccessor.Value;
             Logger = loggerFactory.CreateLogger<HLSRequestManager>();
+
+            Task.Run(()=> {
+                while (true)
+                {
+                    var expireds= HttpSessionManager.GetAll().Where(m => DateTime.Now.Subtract(m.StartTime).TotalSeconds > 20).ToList();
+                    foreach (var item in expireds)
+                    {
+                        //移除httpsession
+                        HttpSessionManager.TryRemoveBySim(item.Sim);
+                        //移除tcpsession
+                        SessionManager.RemoveByTerminalPhoneNo(item.Sim);
+                    }
+                    Thread.Sleep(TimeSpan.FromSeconds(10));
+                }            
+            });
         }
         /// <summary>
         /// 处理hls实时视频请求
@@ -71,7 +89,8 @@ namespace JT1078.Gateway
                     {
                         if (context.Response.ContentLength64 != 0) return;
                         //wwwroot\1234_2\live.m3u8
-                        var key = arg.FullPath.Replace(arg.Name, "").Substring(arg.FullPath.Replace(arg.Name, "").IndexOf("\\")).Replace("\\", "");
+                        //var key = arg.FullPath.Replace(arg.Name, "").Substring(arg.FullPath.Replace(arg.Name, "").IndexOf("\\")).Replace("\\", "");
+                        var key = arg.FullPath.Substring(arg.FullPath.IndexOf("\\")+1,arg.FullPath.LastIndexOf("\\"));
                         var sim = key.Split("_")[0];
                         var channel = int.Parse(key.Split("_")[1]);
                         try
@@ -135,21 +154,8 @@ namespace JT1078.Gateway
             var jT1078HttpContext = new JT1078HttpContext(context, principal);
             jT1078HttpContext.Sim = sim;
             jT1078HttpContext.ChannelNo = int.Parse(channelNo);
-            HttpSessionManager.TryAdd(jT1078HttpContext);
-            //如果过了30s，还未收到浏览器请求，则移除掉session
-            memoryCache.Set(key, DateTime.Now, new MemoryCacheEntryOptions
-            { 
-                  AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(10)
-            }.RegisterPostEvictionCallback((key, value, reason, state) =>
-            {
-                if (reason != EvictionReason.Expired) return;
-                //当清空httpssion时，同时清除tcpsseion
-                var removeSim = key.ToString().Split('_')[0];
-                //移除httpsession
-                HttpSessionManager.TryRemoveBySim(removeSim);
-                //移除tcpsession
-                SessionManager.RemoveByTerminalPhoneNo(removeSim);
-            }));
+            jT1078HttpContext.RTPVideoType = RTPVideoType.Http_Hls;
+            HttpSessionManager.AddOrUpdate(jT1078HttpContext);
         }
     }
 }

@@ -48,6 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\JT1078\src\JT1078.Hls\JT1078.Hls.csproj" />
     <ProjectReference Include="..\JT1078.Gateway.Abstractions\JT1078.Gateway.Abstractions.csproj" />
   </ItemGroup>
 </Project>

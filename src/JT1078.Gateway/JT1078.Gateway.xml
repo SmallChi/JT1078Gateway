@@ -53,6 +53,66 @@
             协调器Coordinator主机登录密码
             </summary>
         </member>
+        <member name="M:JT1078.Gateway.Extensions.JT1078HttpContextExtensions.HttpM3U8Async(System.Net.HttpListenerContext,System.ReadOnlyMemory{System.Byte})">
+            <summary>
+            返回m3u8响应
+            </summary>
+            <param name="context"></param>
+            <param name="buffer"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JT1078.Gateway.Extensions.JT1078HttpContextExtensions.HttpTsAsync(System.Net.HttpListenerContext,System.ReadOnlyMemory{System.Byte})">
+            <summary>
+            返回ts响应数
+            </summary>
+            <param name="context"></param>
+            <param name="buffer"></param>
+            <returns></returns>
+        </member>
+        <member name="T:JT1078.Gateway.HLSPathStorage">
+            <summary>
+            hls路径是否存在处理，及文件监控处理
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.HLSPathStorage.AddPath(System.String,System.String)">
+            <summary>
+            添加路径
+            </summary>
+            <param name="path"></param>
+        </member>
+        <member name="M:JT1078.Gateway.HLSPathStorage.ExsitPath(System.String)">
+            <summary>
+            判断路径是否存在
+            </summary>
+            <param name="path"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JT1078.Gateway.HLSPathStorage.RemoveAllPath(System.String)">
+            <summary>
+            移除所有路径
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:JT1078.Gateway.HLSPathStorage.ExistFileSystemWatcher(System.String)">
+            <summary>
+            是否存在文件监控
+            </summary>
+            <param name="path"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JT1078.Gateway.HLSPathStorage.AddFileSystemWatcher(System.String,System.IO.FileSystemWatcher)">
+            <summary>
+            添加文件监控
+            </summary>
+            <param name="path"></param>
+            <param name="fileSystemWatcher"></param>
+        </member>
+        <member name="M:JT1078.Gateway.HLSPathStorage.DeleteFileSystemWatcher(System.String)">
+            <summary>
+            删除文件监控
+            </summary>
+            <param name="path"></param>
+        </member>
         <member name="T:JT1078.Gateway.HLSRequestManager">
             <summary>
             Hls请求管理
@@ -64,6 +124,11 @@
             </summary>
             <param name="context"></param>
             <param name="principal"></param>
+        </member>
+        <member name="T:JT1078.Gateway.Jobs.JT1078SessionClearJob">
+            <summary>
+            清理hls session
+            </summary>
         </member>
         <member name="T:JT1078.Gateway.JT1078CoordinatorHttpClient">
             <summary>

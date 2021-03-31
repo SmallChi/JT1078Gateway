@@ -62,6 +62,42 @@ namespace JT1078.Gateway.Extensions
             context.Response.OutputStream.Close();
             context.Response.Close();
         }
+        /// <summary>
+        /// 返回m3u8响应
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        public static async ValueTask HttpM3U8Async(this HttpListenerContext context, ReadOnlyMemory<byte> buffer)
+        {
+            context.Response.AddHeader("Access-Control-Allow-Headers", "*");
+            context.Response.AppendHeader("Access-Control-Allow-Origin", "*");
+            context.Response.ContentType = "application/x-mpegURL";
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
+            context.Response.ContentLength64 = buffer.Length;
+            context.Response.KeepAlive = false;
+            await context.Response.OutputStream.WriteAsync(buffer);
+            context.Response.OutputStream.Close();
+            context.Response.Close();
+        }
+        /// <summary>
+        /// 返回ts响应数
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="buffer"></param>
+        /// <returns></returns>
+        public static async ValueTask HttpTsAsync(this HttpListenerContext context, ReadOnlyMemory<byte> buffer)
+        {
+            context.Response.AddHeader("Access-Control-Allow-Headers", "*");
+            context.Response.AppendHeader("Access-Control-Allow-Origin", "*");
+            context.Response.ContentType = "video/MP2T";
+            context.Response.StatusCode = (int)HttpStatusCode.OK;
+            context.Response.ContentLength64 = buffer.Length;
+            context.Response.KeepAlive = false;
+            await context.Response.OutputStream.WriteAsync(buffer);
+            context.Response.OutputStream.Close();
+            context.Response.Close();
+        }
 
         public static async ValueTask HttpSendFirstChunked(this JT1078HttpContext context, ReadOnlyMemory<byte> buffer)
         {

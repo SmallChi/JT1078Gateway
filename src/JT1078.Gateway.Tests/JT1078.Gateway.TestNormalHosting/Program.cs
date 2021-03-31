@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NLog.Extensions.Logging;
 using System;
 using System.IO;
@@ -33,18 +34,21 @@ namespace JT1078.Gateway.TestNormalHosting
                 })
                 .ConfigureServices((hostContext, services) =>
                 {
-                    services.AddMemoryCache();
-                    services.AddScoped<FileSystemWatcher>();
-                    services.AddSingleton<HLSRequestManager>();
+                    services.AddMemoryCache();                  
                     services.AddSingleton<ILoggerFactory, LoggerFactory>();
                     services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+                    //flv视频解码器
                     services.AddSingleton<FlvEncoder>();
+                    //hls视频解码器
                     services.AddSingleton<TSEncoder>();
-                    services.AddSingleton(new M3U8Option 
-                    { 
-                        
-                    });
                     services.AddSingleton<M3U8FileManage>();
+                    //添加hls依赖项
+                    services.AddHlsGateway(hostContext.Configuration);
+                    services.Configure<M3U8Option>(hostContext.Configuration.GetSection("M3U8Option"));
+                    var m3u8Option = services.BuildServiceProvider().GetRequiredService<IOptions<M3U8Option>>().Value;
+                    services.AddSingleton(m3u8Option);
+
+                    
                     //使用内存队列实现会话通知
                     services.AddJT1078Gateway(hostContext.Configuration)
                             .AddTcp()
@@ -55,7 +59,11 @@ namespace JT1078.Gateway.TestNormalHosting
                             .AddMsgConsumer();
                     //内存队列没有做分发，可以自己实现。
                     services.AddHostedService<JT1078FlvNormalMsgHostedService>();
-                    //services.AddHostedService<JT1078HlsNormalMsgHostedService>();
+                    services.AddHostedService<JT1078HlsNormalMsgHostedService>();
+
+                    services.AddSingleton<MessageDispatchDataService>();
+                    services.AddHostedService<MessageDispatchHostedService>();
+                    
                 });
             //测试1:
             //发送完整包

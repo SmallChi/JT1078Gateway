@@ -4,10 +4,13 @@ using JT1078.Gateway.Impl;
 using JT1078.Gateway.Jobs;
 using JT1078.Gateway.Services;
 using JT1078.Gateway.Sessions;
+using JT1078.Hls.Options;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 
@@ -79,7 +82,15 @@ namespace JT1078.Gateway
             builder.JT1078Builder.Services.AddSingleton<JT1078SessionNoticeService>();
             builder.JT1078Builder.Services.AddSingleton<JT1078SessionManager>();
             builder.JT1078Builder.Services.AddHostedService<JT1078SessionNoticeJob>();
+
             return builder;
+        }
+        public static IServiceCollection AddHlsGateway(this IServiceCollection serviceDescriptors, IConfiguration configuration)
+        {
+            serviceDescriptors.AddSingleton<HLSRequestManager>();
+            serviceDescriptors.AddSingleton<HLSPathStorage>();
+            serviceDescriptors.AddHostedService<JT1078SessionClearJob>();
+            return serviceDescriptors;
         }
     }
 }

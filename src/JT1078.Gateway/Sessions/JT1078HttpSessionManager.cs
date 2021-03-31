@@ -29,15 +29,15 @@ namespace JT1078.Gateway.Sessions
             return Sessions.TryAdd(httpContext.SessionId, httpContext);
         }
 
-        public void AddOrUpdate(JT1078HttpContext httpContext) {
-            var session = Sessions.FirstOrDefault(m => m.Value.Sim == httpContext.Sim && m.Value.ChannelNo == httpContext.ChannelNo);
-            if (string.IsNullOrEmpty(session.Key))
+        public void AddOrUpdateHlsSession(JT1078HttpContext httpContext)
+        {
+            //如果不存在就添加，如果存在则删除后添加（保持key和value中的sessionid一致）
+            var session = Sessions.FirstOrDefault(m => m.Value.Sim == httpContext.Sim && m.Value.ChannelNo == httpContext.ChannelNo && m.Value.RTPVideoType == RTPVideoType.Http_Hls);
+            if (!string.IsNullOrEmpty(session.Key))
             {
-                Sessions.TryAdd(httpContext.SessionId, httpContext);
+                Sessions.TryRemove(session.Key, out var _);
             }
-            else {
-                Sessions.TryUpdate(session.Key, httpContext, session.Value);
-            }
+            Sessions.TryAdd(httpContext.SessionId, httpContext);
         }
 
         public async void TryRemove(string sessionId)

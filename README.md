@@ -13,7 +13,7 @@
 | av | video | audio |test|request|
 | --- | ---| --- |---|---|
 | flv  | 😀| ☹ |😀|http-flv、ws-flv|
-| m3u8 | 😀| ☹ |☹|http|
+| m3u8 | 😀| ☹ |😀|http|
 
 ## NuGet安装
 

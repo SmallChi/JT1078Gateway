@@ -39,6 +39,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="JT1078.Hls" Version="1.1.0-preview2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="5.0.0" />
     <PackageReference Include="System.IO.Pipelines" Version="5.0.0" />
   </ItemGroup>
@@ -48,7 +49,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\JT1078\src\JT1078.Hls\JT1078.Hls.csproj" />
     <ProjectReference Include="..\JT1078.Gateway.Abstractions\JT1078.Gateway.Abstractions.csproj" />
   </ItemGroup>
 </Project>

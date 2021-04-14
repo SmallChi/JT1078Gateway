@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace JT1078.Gateway
+namespace JT1078.Gateway.Services
 {
     /// <summary>
     /// hls路径是否存在处理，及文件监控处理

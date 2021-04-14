@@ -149,5 +149,30 @@ namespace JT1078.Gateway.Extensions
         {
             await context.WebSocketContext.WebSocket.SendAsync(Hello, WebSocketMessageType.Text, true, CancellationToken.None);
         }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="context"></param>
+        /// <param name="jT1078AVInfo"></param>
+        /// <returns></returns>
+        public static bool TryGetAVInfo(this HttpListenerContext context,out JT1078AVInfo jT1078AVInfo)
+        {
+            if (context.Request.QueryString.Count < 2)
+            {
+                jT1078AVInfo = default;
+                return false;
+            }     
+            string sim = context.Request.QueryString.Get("sim");
+            string channel = context.Request.QueryString.Get("channel");
+            if (string.IsNullOrEmpty(sim) || string.IsNullOrEmpty(channel))
+            {
+                jT1078AVInfo = default;
+                return false;
+            }
+            int.TryParse(channel, out int channelNo);
+            jT1078AVInfo = new JT1078AVInfo(sim, channelNo);
+            return true;
+        }
     }
 }

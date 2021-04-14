@@ -17,7 +17,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace JT1078.Gateway
+namespace JT1078.Gateway.Services
 {
     /// <summary>
     /// Hls请求管理

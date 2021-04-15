@@ -143,14 +143,14 @@ namespace JT1078.Gateway
         {
             if (authorization.Authorization(context, out IPrincipal principal))
             {
-                hLSRequestManager.HandleHlsRequest(context, principal);
+                hLSRequestManager.HandleHlsRequest(context, principal, jT1078AVInfo);
             }
         }
 
         private void ProcessTs(HttpListenerContext context, JT1078AVInfo jT1078AVInfo)
         {
             //ts 无需验证
-            hLSRequestManager.HandleHlsRequest(context, default);
+            hLSRequestManager.HandleHlsRequest(context, default, jT1078AVInfo);
         }
 
         private async void ProcessFlv(HttpListenerContext context, JT1078AVInfo jT1078AVInfo)

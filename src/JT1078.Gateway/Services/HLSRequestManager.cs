@@ -29,17 +29,11 @@ namespace JT1078.Gateway.Services
         private readonly HLSPathStorage hLSPathStorage;
         private readonly ILogger Logger;
 
-        private readonly IServiceProvider serviceProvider;
-        //private FileSystemWatcher fileSystemWatcher;
-
-        public HLSRequestManager(
-                                                    IOptions<JT1078Configuration> jT1078ConfigurationAccessor,
-                                                    JT1078HttpSessionManager httpSessionManager,
-                                                    HLSPathStorage hLSPathStorage,
-                                                    IServiceProvider serviceProvider,
-                                                     ILoggerFactory loggerFactory)
+        public HLSRequestManager(IOptions<JT1078Configuration> jT1078ConfigurationAccessor,
+                                JT1078HttpSessionManager httpSessionManager,
+                                HLSPathStorage hLSPathStorage,
+                                ILoggerFactory loggerFactory)
         {
-            this.serviceProvider = serviceProvider;
             HttpSessionManager = httpSessionManager;
             this.hLSPathStorage = hLSPathStorage;
             Configuration = jT1078ConfigurationAccessor.Value;
@@ -50,34 +44,24 @@ namespace JT1078.Gateway.Services
         /// </summary>
         /// <param name="context"></param>
         /// <param name="principal"></param>
-        public async void HandleHlsRequest(HttpListenerContext context, IPrincipal principal)
+        /// <param name="jT1078AVInfo"></param>
+        public async void HandleHlsRequest(HttpListenerContext context, IPrincipal principal, JT1078AVInfo jT1078AVInfo)
         {
-            if (context.Request.QueryString.Count < 2)
-            {
-                context.Http404();
-                return;
-            }
-            string sim = context.Request.QueryString.Get("sim");//终端sim卡号
-            string channelNo = context.Request.QueryString.Get("channelNo");//通道号
-            string key = $"{sim}_{channelNo}";
             string filename = Path.GetFileName(context.Request.Url.AbsolutePath.ToString());
-            string filepath = Path.Combine(Configuration.HlsRootDirectory, key, filename);
-
+            string filepath = Path.Combine(Configuration.HlsRootDirectory, jT1078AVInfo.ToString(), filename);
             if (hLSPathStorage.ExsitPath(filepath))
             {
                 try
                 {
                     using (FileStream sr = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
-                        MemoryStream ms = new MemoryStream();
-                        sr.CopyTo(ms);
                         if (filename.Contains("m3u8"))
                         {
-                            await context.HttpM3U8Async(ms.ToArray());
+                            await context.HttpM3U8Async(sr);
                         }
                         else if (filename.Contains("ts"))
                         {
-                            await context.HttpTsAsync(ms.ToArray());
+                            await context.HttpTsAsync(sr);
                         }
                         else
                         {
@@ -97,7 +81,7 @@ namespace JT1078.Gateway.Services
                 {
                     if (filename.ToLower().Contains("m3u8"))
                     {
-                        var directory = Path.Combine(Configuration.HlsRootDirectory, key);
+                        var directory = Path.Combine(Configuration.HlsRootDirectory, jT1078AVInfo.ToString());
                         if (!Directory.Exists(directory))
                         {
                             Directory.CreateDirectory(directory);
@@ -120,9 +104,7 @@ namespace JT1078.Gateway.Services
                                     using (FileStream sr = new FileStream(arg.FullPath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                                     {
                                         hLSPathStorage.AddPath(arg.FullPath, key);
-                                        MemoryStream ms = new MemoryStream();
-                                        sr.CopyTo(ms);
-                                        await context.HttpM3U8Async(ms.ToArray());
+                                        await context.HttpM3U8Async(sr);
                                     }
                                 }
                                 catch (Exception ex)
@@ -147,18 +129,16 @@ namespace JT1078.Gateway.Services
                 }
                 else
                 {
-                    hLSPathStorage.AddPath(filepath, key);
+                    hLSPathStorage.AddPath(filepath, jT1078AVInfo.ToString());
                     using (FileStream sr = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                     {
-                        MemoryStream ms = new MemoryStream();
-                        sr.CopyTo(ms);
                         if (filename.Contains("m3u8"))
                         {
-                            await context.HttpM3U8Async(ms.ToArray());
+                            await context.HttpM3U8Async(sr);
                         }
                         else if (filename.Contains("ts"))
                         {
-                            await context.HttpTsAsync(ms.ToArray());
+                            await context.HttpTsAsync(sr);
                         }
                         else
                         {
@@ -167,8 +147,8 @@ namespace JT1078.Gateway.Services
                     }
                 }
                 var jT1078HttpContext = new JT1078HttpContext(context, principal);
-                jT1078HttpContext.Sim = sim;
-                jT1078HttpContext.ChannelNo = int.Parse(channelNo);
+                jT1078HttpContext.Sim = jT1078AVInfo.Sim;
+                jT1078HttpContext.ChannelNo = jT1078AVInfo.ChannelNo;
                 jT1078HttpContext.RTPVideoType = RTPVideoType.Http_Hls;
                 HttpSessionManager.AddOrUpdateHlsSession(jT1078HttpContext);
             }

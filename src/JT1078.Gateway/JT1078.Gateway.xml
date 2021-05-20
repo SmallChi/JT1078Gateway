@@ -53,77 +53,29 @@
             协调器Coordinator主机登录密码
             </summary>
         </member>
-        <member name="M:JT1078.Gateway.Extensions.JT1078HttpContextExtensions.HttpM3U8Async(System.Net.HttpListenerContext,System.ReadOnlyMemory{System.Byte})">
+        <member name="M:JT1078.Gateway.Extensions.JT1078HttpContextExtensions.HttpM3U8Async(System.Net.HttpListenerContext,System.IO.Stream)">
             <summary>
             返回m3u8响应
             </summary>
             <param name="context"></param>
-            <param name="buffer"></param>
+            <param name="stream"></param>
             <returns></returns>
         </member>
-        <member name="M:JT1078.Gateway.Extensions.JT1078HttpContextExtensions.HttpTsAsync(System.Net.HttpListenerContext,System.ReadOnlyMemory{System.Byte})">
+        <member name="M:JT1078.Gateway.Extensions.JT1078HttpContextExtensions.HttpTsAsync(System.Net.HttpListenerContext,System.IO.Stream)">
             <summary>
             返回ts响应数
             </summary>
             <param name="context"></param>
-            <param name="buffer"></param>
+            <param name="stream"></param>
             <returns></returns>
         </member>
-        <member name="T:JT1078.Gateway.HLSPathStorage">
+        <member name="M:JT1078.Gateway.Extensions.JT1078HttpContextExtensions.TryGetAVInfo(System.Net.HttpListenerContext,JT1078.Gateway.Metadata.JT1078AVInfo@)">
             <summary>
-            hls路径是否存在处理，及文件监控处理
-            </summary>
-        </member>
-        <member name="M:JT1078.Gateway.HLSPathStorage.AddPath(System.String,System.String)">
-            <summary>
-            添加路径
-            </summary>
-            <param name="path"></param>
-        </member>
-        <member name="M:JT1078.Gateway.HLSPathStorage.ExsitPath(System.String)">
-            <summary>
-            判断路径是否存在
-            </summary>
-            <param name="path"></param>
-            <returns></returns>
-        </member>
-        <member name="M:JT1078.Gateway.HLSPathStorage.RemoveAllPath(System.String)">
-            <summary>
-            移除所有路径
-            </summary>
-            <returns></returns>
-        </member>
-        <member name="M:JT1078.Gateway.HLSPathStorage.ExistFileSystemWatcher(System.String)">
-            <summary>
-            是否存在文件监控
-            </summary>
-            <param name="path"></param>
-            <returns></returns>
-        </member>
-        <member name="M:JT1078.Gateway.HLSPathStorage.AddFileSystemWatcher(System.String,System.IO.FileSystemWatcher)">
-            <summary>
-            添加文件监控
-            </summary>
-            <param name="path"></param>
-            <param name="fileSystemWatcher"></param>
-        </member>
-        <member name="M:JT1078.Gateway.HLSPathStorage.DeleteFileSystemWatcher(System.String)">
-            <summary>
-            删除文件监控
-            </summary>
-            <param name="path"></param>
-        </member>
-        <member name="T:JT1078.Gateway.HLSRequestManager">
-            <summary>
-            Hls请求管理
-            </summary>
-        </member>
-        <member name="M:JT1078.Gateway.HLSRequestManager.HandleHlsRequest(System.Net.HttpListenerContext,System.Security.Principal.IPrincipal)">
-            <summary>
-            处理hls实时视频请求
+            
             </summary>
             <param name="context"></param>
-            <param name="principal"></param>
+            <param name="jT1078AVInfo"></param>
+            <returns></returns>
         </member>
         <member name="T:JT1078.Gateway.Jobs.JT1078SessionClearJob">
             <summary>
@@ -158,6 +110,35 @@
             <param name="terminalPhoneNo"></param>
             <param name="channelNo"></param>
         </member>
+        <member name="T:JT1078.Gateway.JT1078HttpServer">
+            <summary>
+            http服务器
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.JT1078HttpServer.#ctor(Microsoft.Extensions.Options.IOptions{JT1078.Gateway.Configurations.JT1078Configuration},JT1078.Gateway.Abstractions.IJT1078Authorization,JT1078.Gateway.Sessions.JT1078HttpSessionManager,JT1078.Gateway.Services.HLSRequestManager,Microsoft.Extensions.Logging.ILoggerFactory)">
+            <summary>
+            
+            </summary>
+            <param name="jT1078ConfigurationAccessor"></param>
+            <param name="authorization"></param>
+            <param name="sessionManager"></param>
+            <param name="hLSRequestManager"></param>
+            <param name="loggerFactory"></param>
+        </member>
+        <member name="M:JT1078.Gateway.JT1078HttpServer.StartAsync(System.Threading.CancellationToken)">
+            <summary>
+            
+            </summary>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JT1078.Gateway.JT1078HttpServer.StopAsync(System.Threading.CancellationToken)">
+            <summary>
+            
+            </summary>
+            <param name="cancellationToken"></param>
+            <returns></returns>
+        </member>
         <member name="M:JT1078.Gateway.JT1078TcpServer.#ctor(JT1078.Gateway.Abstractions.IJT1078MsgProducer,Microsoft.Extensions.Options.IOptions{JT1078.Gateway.Configurations.JT1078Configuration},Microsoft.Extensions.Logging.ILoggerFactory,JT1078.Gateway.Sessions.JT1078SessionManager)">
             <summary>
             使用队列方式
@@ -175,6 +156,181 @@
             <param name="jT1078ConfigurationAccessor"></param>
             <param name="loggerFactory"></param>
             <param name="jT1078SessionManager"></param>
+        </member>
+        <member name="T:JT1078.Gateway.Metadata.JT1078AVInfo">
+            <summary>
+            音视频信息
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.Metadata.JT1078AVInfo.#ctor(System.String,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="sim"></param>
+            <param name="channelNo"></param>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078AVInfo.Sim">
+            <summary>
+            sim
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078AVInfo.ChannelNo">
+            <summary>
+            通道号
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.Metadata.JT1078AVInfo.ToString">
+            <summary>
+            key
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="T:JT1078.Gateway.Metadata.JT1078HttpContext">
+            <summary>
+            http上下文
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.SessionId">
+            <summary>
+            会话Id
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.Context">
+            <summary>
+            http上下文
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.WebSocketContext">
+            <summary>
+            ws上下文
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.User">
+            <summary>
+            用户信息
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.RTPVideoType">
+            <summary>
+            观看视频类型
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.IsWebSocket">
+            <summary>
+            是否是ws协议
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.StartTime">
+            <summary>
+            开始时间
+            </summary>
+        </member>
+        <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.FirstSend">
+            <summary>
+            是否发送首包视频数据
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.Metadata.JT1078HttpContext.#ctor(System.Net.HttpListenerContext,System.Security.Principal.IPrincipal)">
+            <summary>
+            
+            </summary>
+            <param name="context"></param>
+            <param name="user"></param>
+        </member>
+        <member name="M:JT1078.Gateway.Metadata.JT1078HttpContext.#ctor(System.Net.HttpListenerContext,System.Net.WebSockets.HttpListenerWebSocketContext,System.Security.Principal.IPrincipal)">
+            <summary>
+            
+            </summary>
+            <param name="context"></param>
+            <param name="webSocketContext"></param>
+            <param name="user"></param>
+        </member>
+        <member name="T:JT1078.Gateway.Metadata.RTPVideoType">
+            <summary>
+            观看视频类型
+            </summary>
+        </member>
+        <member name="F:JT1078.Gateway.Metadata.RTPVideoType.Http_Flv">
+            <summary>
+            Http_Flv
+            </summary>
+        </member>
+        <member name="F:JT1078.Gateway.Metadata.RTPVideoType.Ws_Flv">
+            <summary>
+            Ws_Flv
+            </summary>
+        </member>
+        <member name="F:JT1078.Gateway.Metadata.RTPVideoType.Http_Hls">
+            <summary>
+            Http_Hls
+            </summary>
+        </member>
+        <member name="F:JT1078.Gateway.Metadata.RTPVideoType.Http_FMp4">
+            <summary>
+            Http_FMp4
+            </summary>
+        </member>
+        <member name="F:JT1078.Gateway.Metadata.RTPVideoType.Ws_FMp4">
+            <summary>
+            Ws_FMp4
+            </summary>
+        </member>
+        <member name="T:JT1078.Gateway.Services.HLSPathStorage">
+            <summary>
+            hls路径是否存在处理，及文件监控处理
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.Services.HLSPathStorage.AddPath(System.String,System.String)">
+            <summary>
+            添加路径
+            </summary>
+            <param name="path"></param>
+        </member>
+        <member name="M:JT1078.Gateway.Services.HLSPathStorage.ExsitPath(System.String)">
+            <summary>
+            判断路径是否存在
+            </summary>
+            <param name="path"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JT1078.Gateway.Services.HLSPathStorage.RemoveAllPath(System.String)">
+            <summary>
+            移除所有路径
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:JT1078.Gateway.Services.HLSPathStorage.ExistFileSystemWatcher(System.String)">
+            <summary>
+            是否存在文件监控
+            </summary>
+            <param name="path"></param>
+            <returns></returns>
+        </member>
+        <member name="M:JT1078.Gateway.Services.HLSPathStorage.AddFileSystemWatcher(System.String,System.IO.FileSystemWatcher)">
+            <summary>
+            添加文件监控
+            </summary>
+            <param name="path"></param>
+            <param name="fileSystemWatcher"></param>
+        </member>
+        <member name="M:JT1078.Gateway.Services.HLSPathStorage.DeleteFileSystemWatcher(System.String)">
+            <summary>
+            删除文件监控
+            </summary>
+            <param name="path"></param>
+        </member>
+        <member name="T:JT1078.Gateway.Services.HLSRequestManager">
+            <summary>
+            Hls请求管理
+            </summary>
+        </member>
+        <member name="M:JT1078.Gateway.Services.HLSRequestManager.HandleHlsRequest(System.Net.HttpListenerContext,System.Security.Principal.IPrincipal,JT1078.Gateway.Metadata.JT1078AVInfo)">
+            <summary>
+            处理hls实时视频请求
+            </summary>
+            <param name="context"></param>
+            <param name="principal"></param>
+            <param name="jT1078AVInfo"></param>
         </member>
         <member name="M:JT1078.Gateway.Sessions.JT1078HttpSessionManager.SendAVData(JT1078.Gateway.Metadata.JT1078HttpContext,System.Byte[],System.Boolean)">
             <summary>

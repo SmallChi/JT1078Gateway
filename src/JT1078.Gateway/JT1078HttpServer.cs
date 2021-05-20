@@ -102,7 +102,7 @@ namespace JT1078.Gateway
                                 context.Http404();
                                 return;
                             }
-                            if (context.TryGetAVInfo(out JT1078AVInfo jT1078AVInfo))
+                            if (!context.TryGetAVInfo(out JT1078AVInfo jT1078AVInfo))
                             {
                                 await context.Http400();
                                 return;

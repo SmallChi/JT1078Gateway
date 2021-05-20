@@ -15,8 +15,8 @@
             var flvPlayer = flvjs.createPlayer({
                 type: 'flv',
                 isLive: true,
-                url: "http://127.0.0.1:15555/?sim=1901305037&channel=1&token=123456"
-                //url: "ws://127.0.0.1:15555/?sim=11234567810&channel=1&token=123456"
+                //url: "http://127.0.0.1:15555/live.flv?sim=1901305037&channel=3&token=123456"
+                url: "ws://127.0.0.1:15555/live.flv?sim=1901305037&channel=3&token=123456"
             });
             flvPlayer.attachMediaElement(player);
             flvPlayer.load();

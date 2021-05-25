@@ -7,6 +7,7 @@
 3. 了解WebSocket消息推送
 4. [了解flv.js](https://github.com/bilibili/flv.js)
 5. [了解hls.js](https://github.com/video-dev/hls.js)
+6. 了解fmp4
 
 > 注意：暂不支持音频
 
@@ -14,6 +15,7 @@
 | --- | ---| --- |---|---|
 | flv  | 😀| ☹ |😀|http-flv、ws-flv|
 | m3u8 | 😀| ☹ |😀|http|
+| fmp4 | 😀| ☹ |☹|http-fmp4、ws-fmp4|
 
 ## NuGet安装
 

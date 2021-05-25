@@ -12,5 +12,6 @@ namespace JT1078.Gateway.TestNormalHosting.Services
     {
         public Channel<JT1078Package> HlsChannel = Channel.CreateUnbounded<JT1078Package>();
         public Channel<JT1078Package> FlvChannel = Channel.CreateUnbounded<JT1078Package>();
+        public Channel<JT1078Package> FMp4Channel = Channel.CreateUnbounded<JT1078Package>();
     }
 }

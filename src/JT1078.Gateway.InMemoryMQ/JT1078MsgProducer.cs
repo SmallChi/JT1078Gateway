@@ -3,6 +3,7 @@ using JT1078.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
@@ -24,9 +25,9 @@ namespace JT1078.Gateway.InMemoryMQ
             
         }
 
-        public async ValueTask ProduceAsync(string sim, byte[] data)
+        public async ValueTask ProduceAsync(string sim, byte[] data, CancellationToken cancellationToken = default)
         {
-            await Channel.Channel.Writer.WriteAsync((sim, data));
+            await Channel.Channel.Writer.WriteAsync((sim, data), cancellationToken);
         }
     }
 }

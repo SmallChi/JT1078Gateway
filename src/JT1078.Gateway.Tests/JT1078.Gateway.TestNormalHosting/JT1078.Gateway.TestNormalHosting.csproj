@@ -31,11 +31,13 @@
     <None Update="Configs\NLog.xsd">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="wwwroot\demo\demo.m3u8">
+    <None Update="wwwroot\hls_demo\demo.m3u8">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="wwwroot\demo\demo.ts">
+    <None Update="wwwroot\hls_demo\demo.ts">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+
+  <ProjectExtensions><VisualStudio><UserProperties appsettings_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 </Project>

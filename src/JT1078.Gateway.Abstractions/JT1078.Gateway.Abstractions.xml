@@ -9,12 +9,13 @@
             传输协议类型
             </summary>
         </member>
-        <member name="M:JT1078.Gateway.Abstractions.IJT1078MsgProducer.ProduceAsync(System.String,System.Byte[])">
+        <member name="M:JT1078.Gateway.Abstractions.IJT1078MsgProducer.ProduceAsync(System.String,System.Byte[],System.Threading.CancellationToken)">
             <summary>
             
             </summary>
             <param name="sim">设备sim终端号</param>
             <param name="data">jt1078 hex data</param>
+            <param name="cancellationToken">cts</param>
         </member>
         <member name="P:JT1078.Gateway.Abstractions.IJT1078Session.TerminalPhoneNo">
             <summary>

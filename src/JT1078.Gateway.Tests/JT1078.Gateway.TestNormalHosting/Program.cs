@@ -1,8 +1,10 @@
 ﻿using JT1078.Flv;
+using JT1078.FMp4;
 using JT1078.Gateway.InMemoryMQ;
 using JT1078.Gateway.TestNormalHosting.Services;
 using JT1078.Hls;
 using JT1078.Hls.Options;
+using JT1078.Protocol.H264;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,20 +37,19 @@ namespace JT1078.Gateway.TestNormalHosting
                 .ConfigureServices((hostContext, services) =>
                 {
                     services.AddMemoryCache();                  
-                    services.AddSingleton<ILoggerFactory, LoggerFactory>();
-                    services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
                     //flv视频解码器
                     services.AddSingleton<FlvEncoder>();
                     //hls视频解码器
                     services.AddSingleton<TSEncoder>();
                     services.AddSingleton<M3U8FileManage>();
+                    services.AddSingleton<H264Decoder>();
+                    services.AddSingleton<FMp4Encoder>();
                     //添加hls依赖项
                     services.AddHlsGateway(hostContext.Configuration);
                     services.Configure<M3U8Option>(hostContext.Configuration.GetSection("M3U8Option"));
                     var m3u8Option = services.BuildServiceProvider().GetRequiredService<IOptions<M3U8Option>>().Value;
                     services.AddSingleton(m3u8Option);
 
-                    
                     //使用内存队列实现会话通知
                     services.AddJT1078Gateway(hostContext.Configuration)
                             .AddTcp()
@@ -60,6 +61,7 @@ namespace JT1078.Gateway.TestNormalHosting
                     //内存队列没有做分发，可以自己实现。
                     services.AddHostedService<JT1078FlvNormalMsgHostedService>();
                     services.AddHostedService<JT1078HlsNormalMsgHostedService>();
+                    services.AddHostedService<JT1078FMp4NormalMsgHostedService>();
 
                     services.AddSingleton<MessageDispatchDataService>();
                     services.AddHostedService<MessageDispatchHostedService>();

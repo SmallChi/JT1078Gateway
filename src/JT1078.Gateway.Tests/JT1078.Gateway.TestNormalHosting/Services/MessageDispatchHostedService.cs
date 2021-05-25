@@ -20,7 +20,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
         private readonly MessageDispatchDataService messageDispatchDataService;
 
         public MessageDispatchHostedService(IJT1078MsgConsumer JT1078MsgConsumer,
-                                                                        MessageDispatchDataService messageDispatchDataService) {
+                                            MessageDispatchDataService messageDispatchDataService) {
             this.JT1078MsgConsumer = JT1078MsgConsumer;
             this.messageDispatchDataService = messageDispatchDataService;
         }
@@ -33,8 +33,9 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                 var merge = JT1078.Protocol.JT1078Serializer.Merge(package);
                 if (merge != null)
                 {
-                    await messageDispatchDataService.HlsChannel.Writer.WriteAsync(merge);
-                    await messageDispatchDataService.FlvChannel.Writer.WriteAsync(merge);
+                    await messageDispatchDataService.HlsChannel.Writer.WriteAsync(merge, stoppingToken);
+                    await messageDispatchDataService.FlvChannel.Writer.WriteAsync(merge, stoppingToken);
+                    await messageDispatchDataService.FMp4Channel.Writer.WriteAsync(merge, stoppingToken);
                 }
             });
             return Task.CompletedTask;

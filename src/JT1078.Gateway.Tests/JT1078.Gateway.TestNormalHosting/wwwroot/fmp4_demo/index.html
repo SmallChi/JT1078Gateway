@@ -168,7 +168,8 @@
             // source_buffer.mode = 'segments';
             source_buffer.addEventListener("updateend", loadPacket);
 
-            ws = new WebSocket("ws://127.0.0.1:15555/live.mp4?sim=12345678901&channel=3&token=123456"); //创建WebSocket连接
+            ws = new WebSocket("ws://127.0.0.1:15555/live.mp4?sim=1901305037&channel=1&token=123456"); //创建WebSocket连接
+            ws.binaryType = 'arraybuffer';
             ws.onmessage = function (e) {
                 //当客户端收到服务端发来的消息时，触发onmessage事件，参数e.data包含server传递过来的数据
                 console.log(e.data);

@@ -42,13 +42,13 @@ namespace JT1078.Gateway.TestNormalHosting
                     //hls视频解码器
                     services.AddSingleton<TSEncoder>();
                     services.AddSingleton<M3U8FileManage>();
-                    services.AddSingleton<H264Decoder>();
-                    services.AddSingleton<FMp4Encoder>();
                     //添加hls依赖项
                     services.AddHlsGateway(hostContext.Configuration);
                     services.Configure<M3U8Option>(hostContext.Configuration.GetSection("M3U8Option"));
                     var m3u8Option = services.BuildServiceProvider().GetRequiredService<IOptions<M3U8Option>>().Value;
                     services.AddSingleton(m3u8Option);
+
+                    services.AddSingleton<FMp4Encoder>();
 
                     //使用内存队列实现会话通知
                     services.AddJT1078Gateway(hostContext.Configuration)

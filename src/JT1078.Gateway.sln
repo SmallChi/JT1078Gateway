@@ -17,6 +17,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.Gateway", "JT1078.Ga
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.Gateway.InMemoryMQ", "JT1078.Gateway.InMemoryMQ\JT1078.Gateway.InMemoryMQ.csproj", "{011934D6-BEE7-4CDA-9F67-4D6D7D672D6C}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.FMp4", "..\..\JT1078\src\JT1078.FMp4\JT1078.FMp4.csproj", "{FDE3681A-46D2-451A-91A0-E5F63E80737F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.Protocol", "..\..\JT1078\src\JT1078.Protocol\JT1078.Protocol.csproj", "{D8714E62-5ECB-4886-8A97-11F215F8D60F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +51,14 @@ Global
 		{011934D6-BEE7-4CDA-9F67-4D6D7D672D6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{011934D6-BEE7-4CDA-9F67-4D6D7D672D6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{011934D6-BEE7-4CDA-9F67-4D6D7D672D6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDE3681A-46D2-451A-91A0-E5F63E80737F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDE3681A-46D2-451A-91A0-E5F63E80737F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDE3681A-46D2-451A-91A0-E5F63E80737F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDE3681A-46D2-451A-91A0-E5F63E80737F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D8714E62-5ECB-4886-8A97-11F215F8D60F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D8714E62-5ECB-4886-8A97-11F215F8D60F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D8714E62-5ECB-4886-8A97-11F215F8D60F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D8714E62-5ECB-4886-8A97-11F215F8D60F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -195,11 +195,6 @@
             会话Id
             </summary>
         </member>
-        <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.FMp4EncoderInfo">
-            <summary>
-            FMp4编码信息
-            </summary>
-        </member>
         <member name="P:JT1078.Gateway.Metadata.JT1078HttpContext.Context">
             <summary>
             http上下文

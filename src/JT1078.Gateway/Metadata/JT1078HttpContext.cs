@@ -19,10 +19,6 @@ namespace JT1078.Gateway.Metadata
         /// </summary>
         public string SessionId { get; }
         /// <summary>
-        /// FMp4编码信息
-        /// </summary>
-        public FMp4EncoderInfo FMp4EncoderInfo { get; set; } = new FMp4EncoderInfo();
-        /// <summary>
         /// http上下文
         /// </summary>
         [JsonIgnore]

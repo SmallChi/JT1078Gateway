@@ -41,6 +41,8 @@ namespace JT1078.Gateway.TestNormalHosting
                     services.AddSingleton<FlvEncoder>();
                     //hls视频解码器
                     services.AddSingleton<TSEncoder>();
+                    //h264
+                    services.AddSingleton<H264Decoder>();
                     services.AddSingleton<M3U8FileManage>();
                     //添加hls依赖项
                     services.AddHlsGateway(hostContext.Configuration);

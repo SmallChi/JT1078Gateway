@@ -65,6 +65,16 @@ namespace JT1078.Gateway.Jobs
                             writer.WriteNumber(nameof(SessionManager.UdpSessionCount), SessionManager.UdpSessionCount);
                             writer.WriteNumber(nameof(HttpSessionManager.HttpSessionCount), HttpSessionManager.HttpSessionCount);
                             writer.WriteNumber(nameof(HttpSessionManager.WebSocketSessionCount), HttpSessionManager.WebSocketSessionCount);
+                            writer.WriteStartArray("Sims");
+                            var sessions = HttpSessionManager.GetAll();
+                            if (sessions != null)
+                            {
+                                foreach(var session in sessions)
+                                {
+                                    writer.WriteStringValue($"{session.Sim}_{session.ChannelNo}_{session.SessionId}");
+                                }
+                            }
+                            writer.WriteEndArray();
                             writer.WriteEndObject();
                         }
                         json = Encoding.UTF8.GetString(stream.ToArray());

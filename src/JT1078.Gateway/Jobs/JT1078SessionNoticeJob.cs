@@ -50,9 +50,9 @@ namespace JT1078.Gateway.Jobs
                         }
                     }
                 }
-                catch
+                catch(Exception ex)
                 {
-
+                    logger.LogError(ex, "");
                 }
             }, stoppingToken);
         }

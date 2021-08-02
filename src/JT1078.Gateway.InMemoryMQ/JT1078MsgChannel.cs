@@ -11,7 +11,9 @@ namespace JT1078.Gateway.InMemoryMQ
 
         public JT1078MsgChannel()
         {
-            Channel = System.Threading.Channels.Channel.CreateUnbounded<(string, byte[])>();
+            Channel = System.Threading.Channels.Channel.CreateUnbounded<(string, byte[])>(new UnboundedChannelOptions { 
+                 SingleWriter=true,
+            });
         }
     }
 }

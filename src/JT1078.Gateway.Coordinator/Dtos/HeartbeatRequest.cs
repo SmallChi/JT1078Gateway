@@ -14,5 +14,6 @@ namespace JT1078.Gateway.Coordinator.Dtos
         public int UdpSessionCount { get; set; }
         public int HttpSessionCount { get; set; }
         public int WebSocketSessionCount { get; set; }
+        public List<string> Sims { get; set; }
     }
 }

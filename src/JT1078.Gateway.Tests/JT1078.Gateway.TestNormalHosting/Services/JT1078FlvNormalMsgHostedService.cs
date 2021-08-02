@@ -60,7 +60,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                         memoryCache.Set(key, data);
                     }
                     var httpSessions = HttpSessionManager.GetAllBySimAndChannelNo(data.SIM.TrimStart('0'), data.LogicChannelNumber);
-                    var firstHttpSessions = httpSessions.Where(w => !w.FirstSend).ToList();
+                    var firstHttpSessions = httpSessions.Where(w => !w.FirstSend && (w.RTPVideoType== Metadata.RTPVideoType.Http_Flv || w.RTPVideoType == Metadata.RTPVideoType.Ws_Flv)).ToList();
                     if (firstHttpSessions.Count > 0)
                     {
                         if (memoryCache.TryGetValue(key, out JT1078Package idata))
@@ -79,7 +79,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                             }
                         }
                     }
-                    var otherHttpSessions = httpSessions.Where(w => w.FirstSend).ToList();
+                    var otherHttpSessions = httpSessions.Where(w => w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_Flv || w.RTPVideoType == Metadata.RTPVideoType.Ws_Flv)).ToList();
                     if (otherHttpSessions.Count > 0)
                     {
                         try

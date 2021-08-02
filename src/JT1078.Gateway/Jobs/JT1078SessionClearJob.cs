@@ -50,27 +50,29 @@ namespace JT1078.Gateway.Jobs
                     try
                     {
                         var hasSessions = HttpSessionManager.GetAll().Where(m => DateTime.Now.Subtract(m.StartTime).TotalSeconds > 60 && m.RTPVideoType == Metadata.RTPVideoType.Http_Hls).ToList();//所有http 的 hls短链接
-                        foreach (var item in hasSessions)
+                       foreach (var item in hasSessions)
                        {
                             var key = $"{item.Sim}_{item.ChannelNo}";
                             HttpSessionManager.TryRemove(item.SessionId);//超过120s未访问。
                             //清楚所有hls文件
                             string filepath = Path.Combine(Configuration.HlsRootDirectory, key);
-                            if (Directory.Exists(filepath)) {
+                            if (Directory.Exists(filepath)) 
+                            {
                                 Directory.Delete(filepath,true);
                             }
                             hLSPathStorage.RemoveAllPath(key);//移除所有缓存
-
-                            if (logger.IsEnabled(LogLevel.Debug)) {
-                                logger.LogDebug($"{System.Text.Json.JsonSerializer.Serialize(item)},清楚session");
+                            if (logger.IsEnabled(LogLevel.Debug)) 
+                            {
+                                logger.LogDebug($"{System.Text.Json.JsonSerializer.Serialize(item)},清除session");
                             }
-                            var hasTcpSession = HttpSessionManager.GetAllBySimAndChannelNo(item.Sim.TrimStart('0'), item.ChannelNo).Any(m => m.IsWebSocket);//是否存在tcp的 socket链接
-                            var httpFlvSession = HttpSessionManager.GetAllBySimAndChannelNo(item.Sim.TrimStart('0'), item.ChannelNo).Any(m => m.RTPVideoType == Metadata.RTPVideoType.Http_Flv);//是否存在http的 flv长链接
+                            string sim = item.Sim.TrimStart('0');
+                            var hasTcpSession = HttpSessionManager.GetAllBySimAndChannelNo(sim, item.ChannelNo).Any(m => m.IsWebSocket);//是否存在tcp的 socket链接
+                            var httpFlvSession = HttpSessionManager.GetAllBySimAndChannelNo(sim, item.ChannelNo).Any(m => m.RTPVideoType == Metadata.RTPVideoType.Http_Flv);//是否存在http的 flv长链接
                             if (!hasTcpSession && !httpFlvSession)
                             {
                                 //不存在websocket链接和http-flv链接时，主动断开设备链接以节省流量
                                 //移除tcpsession,断开设备链接
-                                if(SessionManager!=null) SessionManager.RemoveByTerminalPhoneNo(item.Sim.TrimStart('0'));
+                                if(SessionManager!=null) SessionManager.RemoveByTerminalPhoneNo(sim);
                             }
                         }
                     }

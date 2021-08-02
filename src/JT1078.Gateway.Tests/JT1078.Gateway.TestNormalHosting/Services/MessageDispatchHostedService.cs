@@ -14,7 +14,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
     /// <summary>
     /// 消费分发服务。同时分发给hls和flv
     /// </summary>
-     public class MessageDispatchHostedService : BackgroundService
+    public class MessageDispatchHostedService : BackgroundService
     {
         private IJT1078MsgConsumer JT1078MsgConsumer;
         private readonly MessageDispatchDataService messageDispatchDataService;
@@ -33,8 +33,8 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                 var merge = JT1078.Protocol.JT1078Serializer.Merge(package);
                 if (merge != null)
                 {
-                    //await messageDispatchDataService.HlsChannel.Writer.WriteAsync(merge, stoppingToken);
-                    //await messageDispatchDataService.FlvChannel.Writer.WriteAsync(merge, stoppingToken);
+                    await messageDispatchDataService.HlsChannel.Writer.WriteAsync(merge, stoppingToken);
+                    await messageDispatchDataService.FlvChannel.Writer.WriteAsync(merge, stoppingToken);
                     await messageDispatchDataService.FMp4Channel.Writer.WriteAsync(merge, stoppingToken);
                 }
             });

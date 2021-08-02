@@ -231,8 +231,8 @@ namespace JT1078.Gateway
                             }
                             catch (Exception ex)
                             {
-                                LogLogger.LogError($"[Error Parse 1]:{package1.ToHexString()}");
-                                Logger.LogError(ex, $"[Error Parse 1]:{package1.ToHexString()}");
+                                LogLogger.LogError($"[Error Parse 1]:{fixedHeaderInfo.SIM}-{package1.ToHexString()}");
+                                Logger.LogError(ex, $"[Error Parse 1]:{fixedHeaderInfo.SIM}-{package1.ToHexString()}");
                             }
                             finally
                             {
@@ -260,7 +260,7 @@ namespace JT1078.Gateway
                 seqReader.Advance(fixedHeaderInfo.TotalSize);
                 if (LogLogger.IsEnabled(LogLevel.Trace))
                 {
-                    LogLogger.LogTrace($"===>{package.ToHexString()}");
+                    LogLogger.LogTrace($"===>{fixedHeaderInfo.SIM}-{package.ToHexString()}");
                 }
                 try
                 {
@@ -269,8 +269,8 @@ namespace JT1078.Gateway
                 }
                 catch (Exception ex)
                 {
-                    LogLogger.LogError($"[Error Parse 2]:{package.ToHexString()}");
-                    Logger.LogError(ex, $"[Error Parse 2]:{package.ToHexString()}");
+                    LogLogger.LogError($"[Error Parse 2]:{fixedHeaderInfo.SIM}-{package.ToHexString()}");
+                    Logger.LogError(ex, $"[Error Parse 2]:{fixedHeaderInfo.SIM}-{package.ToHexString()}");
                 }
                 finally
                 {

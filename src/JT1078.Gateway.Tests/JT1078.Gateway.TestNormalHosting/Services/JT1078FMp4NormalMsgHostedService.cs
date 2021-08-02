@@ -69,7 +69,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                     if (memoryCache.TryGetValue(key, out byte[] moov))
                     {
                         var httpSessions = HttpSessionManager.GetAllBySimAndChannelNo(data.SIM.TrimStart('0'), data.LogicChannelNumber);
-                        var firstHttpSessions = httpSessions.Where(w => !w.FirstSend).ToList();
+                        var firstHttpSessions = httpSessions.Where(w => !w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_FMp4 || w.RTPVideoType == Metadata.RTPVideoType.Ws_FMp4)).ToList();
                         if (firstHttpSessions.Count > 0)
                         {
                             try
@@ -93,17 +93,22 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                                 Logger.LogError(ex, $"{data.SIM},{true},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
                             }
                         }
-                        var otherHttpSessions = httpSessions.Where(w => w.FirstSend).ToList();
+                        var otherHttpSessions = httpSessions.Where(w => w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_FMp4 || w.RTPVideoType == Metadata.RTPVideoType.Ws_FMp4)).ToList();
                         if (otherHttpSessions.Count > 0)
                         {
                             try
                             {
+                                //foreach (var session in otherHttpSessions)
+                                //{
+                                //    var fmp4VideoBuffer = FM4Encoder.EncoderOtherVideoBox(nalus);
+                                //    HttpSessionManager.SendAVData(session, fmp4VideoBuffer, false);
+                                //}
                                 var firstNALU = nalus.FirstOrDefault();
                                 if (firstNALU == null)
                                 {
                                     continue;
                                 }
-                                if(!avFrameDict.TryGetValue(firstNALU.GetKey(),out List<H264NALU> cacheNALU))
+                                if (!avFrameDict.TryGetValue(firstNALU.GetKey(), out List<H264NALU> cacheNALU))
                                 {
                                     cacheNALU = new List<H264NALU>();
                                     avFrameDict.TryAdd(firstNALU.GetKey(), cacheNALU);

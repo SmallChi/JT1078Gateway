@@ -60,7 +60,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                     string key = $"{data.GetKey()}_{ikey}";
                     if (data.Label3.DataType == Protocol.Enums.JT1078DataType.视频I帧)
                     {
-                        var moovBuffer = FM4Encoder.EncoderMoovBox(
+                        var moovBuffer = FM4Encoder.VideoMoovBox(
                             nalus.FirstOrDefault(f => f.NALUHeader.NalUnitType == NalUnitType.SPS),
                             nalus.FirstOrDefault(f => f.NALUHeader.NalUnitType == NalUnitType.PPS));
                         memoryCache.Set(key, moovBuffer);
@@ -76,11 +76,10 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                             {
                                 try
                                 {
-                                    var ftyp = FM4Encoder.EncoderFtypBox();
+                                    var ftyp = FM4Encoder.FtypBox();
                                     foreach (var session in firstHttpSessions)
                                     {
-                                        HttpSessionManager.SendAVData(session, ftyp, true);
-                                        HttpSessionManager.SendAVData(session, moov, false);
+                                        HttpSessionManager.SendAVData(session, ftyp.Concat(moov).ToArray(), true);
                                     }
                                 }
                                 catch (Exception ex)
@@ -100,8 +99,8 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                             {
                                 //foreach (var session in otherHttpSessions)
                                 //{
-                                //    var fmp4VideoBuffer = FM4Encoder.EncoderOtherVideoBox(nalus);
-                                //    HttpSessionManager.SendAVData(session, fmp4VideoBuffer, false);
+                                //    var fmp4VideoBuffer = FM4Encoder.OtherVideoBox(nalus);
+                                //    HttpSessionManager.SendAVData(session, FM4Encoder.StypBox().Concat(fmp4VideoBuffer).ToArray(), false);
                                 //}
                                 var firstNALU = nalus.FirstOrDefault();
                                 if (firstNALU == null)
@@ -126,8 +125,8 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                                         {
                                             foreach (var session in otherHttpSessions)
                                             {
-                                                var fmp4VideoBuffer = FM4Encoder.EncoderOtherVideoBox(cacheNALU);
-                                                HttpSessionManager.SendAVData(session, fmp4VideoBuffer, false);
+                                                var fmp4VideoBuffer = FM4Encoder.OtherVideoBox(cacheNALU);
+                                                HttpSessionManager.SendAVData(session, FM4Encoder.StypBox().Concat(fmp4VideoBuffer).ToArray(), false);
                                             }
                                             cacheNALU.Clear();
                                         }

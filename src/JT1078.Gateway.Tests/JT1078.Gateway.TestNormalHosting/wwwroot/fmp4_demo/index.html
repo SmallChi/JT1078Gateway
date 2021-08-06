@@ -18,7 +18,7 @@
         // *** USER PARAMETERS ***
         var verbose = true;
         // var verbose = true; // enable for saturating the console ..
-        var buffering_sec = 3; // use some reasonable value
+        var buffering_sec = 1; // use some reasonable value
         var buffering_sec_seek = buffering_sec * 0.9;
         // ..seek the stream if it's this much away or
         // from the last available timestamp
@@ -117,15 +117,15 @@
             //    return;
             // }
             // keep the latency to minimum
-            let latest = stream_live.duration;
-            if ((stream_live.duration >= buffering_sec) && ((latest - stream_live.currentTime) > buffering_sec_seek)) {
-                console.log("seek from ", stream_live.currentTime, " to ", latest);
-                df = (stream_live.duration - stream_live.currentTime); // this much away from the last available frame
-                if ((df > buffering_sec_seek)) {
-                    seek_to = stream_live.duration - buffering_sec_seek_distance;
-                    stream_live.currentTime = seek_to;
-                }
-            }
+            // let latest = stream_live.duration;
+            // if ((stream_live.duration >= buffering_sec) && ((latest - stream_live.currentTime) > buffering_sec_seek)) {
+            //     console.log("seek from ", stream_live.currentTime, " to ", latest);
+            //     df = (stream_live.duration - stream_live.currentTime); // this much away from the last available frame
+            //     if ((df > buffering_sec_seek)) {
+            //         seek_to = stream_live.duration - buffering_sec_seek_distance;
+            //         stream_live.currentTime = seek_to;
+            //     }
+            // }
             if (!source_buffer.updating) {
                 if (verbose) { console.log("Streaming started: ", memview[0], memview[1], memview[2], memview[3], memview[4]); }
                 stream_started = true;
@@ -166,7 +166,10 @@
             source_buffer.mode = 'sequence';
             // source_buffer.mode = 'segments';
             source_buffer.addEventListener("updateend", loadPacket);
-            ws = new WebSocket("ws://127.0.0.1:81/live/JT1078_7.live.mp4"); //创建WebSocket连接
+            //ws = new WebSocket("ws://49.235.89.102:15555/live.mp4?sim=19019000001&channel=3&token=123456");
+            
+            ws = new WebSocket("ws://49.235.89.102:15555/live.mp4?sim=1901305037&channel=2&token=123456");
+            //ws = new WebSocket("ws://127.0.0.1:81/live/JT1078_8.live.mp4"); //创建WebSocket连接
             ws.binaryType = 'arraybuffer';
             ws.onmessage = function (e) {
                 //当客户端收到服务端发来的消息时，触发onmessage事件，参数e.data包含server传递过来的数据

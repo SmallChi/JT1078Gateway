@@ -54,45 +54,28 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                         Logger.LogDebug(JsonSerializer.Serialize(HttpSessionManager.GetAll()));
                         Logger.LogDebug($"{data.SIM},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
                     }
-                    string key = $"{data.GetKey()}_{ikey}";
-                    if (data.Label3.DataType == Protocol.Enums.JT1078DataType.视频I帧)
-                    {
-                        memoryCache.Set(key, data);
-                    }
+
                     var httpSessions = HttpSessionManager.GetAllBySimAndChannelNo(data.SIM.TrimStart('0'), data.LogicChannelNumber);
                     var firstHttpSessions = httpSessions.Where(w => !w.FirstSend && (w.RTPVideoType== Metadata.RTPVideoType.Http_Flv || w.RTPVideoType == Metadata.RTPVideoType.Ws_Flv)).ToList();
+                    var otherHttpSessions = httpSessions.Where(w => w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_Flv || w.RTPVideoType == Metadata.RTPVideoType.Ws_Flv)).ToList();
+                 
                     if (firstHttpSessions.Count > 0)
                     {
-                        if (memoryCache.TryGetValue(key, out JT1078Package idata))
+                        if (data.Label3.DataType == Protocol.Enums.JT1078DataType.视频I帧)
                         {
-                            try
+                            var flvVideoBuffer = FlvEncoder.EncoderVideoTag(data, true);
+                            foreach (var session in firstHttpSessions)
                             {
-                                var flvVideoBuffer = FlvEncoder.EncoderVideoTag(idata, true);
-                                foreach (var session in firstHttpSessions)
-                                {
-                                    HttpSessionManager.SendAVData(session, flvVideoBuffer, true);
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                Logger.LogError(ex, $"{data.SIM},{true},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
+                                HttpSessionManager.SendAVData(session, flvVideoBuffer, true);
                             }
                         }
                     }
-                    var otherHttpSessions = httpSessions.Where(w => w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_Flv || w.RTPVideoType == Metadata.RTPVideoType.Ws_Flv)).ToList();
                     if (otherHttpSessions.Count > 0)
                     {
-                        try
+                        var flvVideoBuffer = FlvEncoder.EncoderVideoTag(data, false);
+                        foreach (var session in otherHttpSessions)
                         {
-                            var flvVideoBuffer = FlvEncoder.EncoderVideoTag(data, false);
-                            foreach (var session in otherHttpSessions)
-                            {
-                                HttpSessionManager.SendAVData(session, flvVideoBuffer, false);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.LogError(ex, $"{data.SIM},{false},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
+                            HttpSessionManager.SendAVData(session, flvVideoBuffer, false);
                         }
                     }
                 }

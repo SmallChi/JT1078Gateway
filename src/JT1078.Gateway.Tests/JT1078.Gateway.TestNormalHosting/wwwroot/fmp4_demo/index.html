@@ -166,9 +166,9 @@
             source_buffer.mode = 'sequence';
             // source_buffer.mode = 'segments';
             source_buffer.addEventListener("updateend", loadPacket);
-            //ws = new WebSocket("ws://49.235.89.102:15555/live.mp4?sim=19019000001&channel=3&token=123456");
+            ws = new WebSocket("ws://49.235.89.102:15555/live.mp4?sim=40281815788&channel=1&token=123456");
             
-            ws = new WebSocket("ws://49.235.89.102:15555/live.mp4?sim=1901305037&channel=2&token=123456");
+            //ws = new WebSocket("ws://49.235.89.102:15555/live.mp4?sim=1901305037&channel=2&token=123456");
             //ws = new WebSocket("ws://127.0.0.1:81/live/JT1078_8.live.mp4"); //创建WebSocket连接
             ws.binaryType = 'arraybuffer';
             ws.onmessage = function (e) {

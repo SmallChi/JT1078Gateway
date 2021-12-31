@@ -1,24 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\Version.props" />
+  <Import Project="..\Info.props" />
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net5.0;</TargetFrameworks>
-    <LangVersion>9.0</LangVersion>
-    <Copyright>Copyright 2019.</Copyright>
-    <Authors>SmallChi(Koike)</Authors>
     <PackageId>JT1078.Gateway.Abstractions</PackageId>
     <Product>JT1078.Gateway.Abstractions</Product>
     <Description>基于JT1078Gateway的抽象库</Description>
     <PackageReleaseNotes>基于JT1078Gateway的抽象库</PackageReleaseNotes>
-    <RepositoryUrl>https://github.com/SmallChi/JT1078Gateway</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/SmallChi/JT1078Gateway</PackageProjectUrl>
-    <licenseUrl>https://github.com/SmallChi/JT1078Gateway/blob/master/LICENSE</licenseUrl>
-    <license>https://github.com/SmallChi/JT1078Gateway/blob/master/LICENSE</license>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <SignAssembly>false</SignAssembly>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>$(JT1078PackageVersion)</Version>
     <DocumentationFile>JT1078.Gateway.Abstractions.xml</DocumentationFile>
+	<PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,10 +15,11 @@
     <Compile Remove="IJT1078PackageProducer.cs" />
     <Compile Remove="IJT1078QueueGatewayBuilder.cs" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-  </ItemGroup>
+
+	<ItemGroup>
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="" />
+	</ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="JT1078" Version="1.1.1-preview1" />

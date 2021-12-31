@@ -1,24 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\Version.props" />
+  <Import Project="..\Info.props" />
   <PropertyGroup>
-    <TargetFrameworks>net6.0;</TargetFrameworks>
-    <LangVersion>9.0</LangVersion>
-    <Copyright>Copyright 2019.</Copyright>
-    <Authors>SmallChi(Koike)</Authors>
     <PackageId>JT1078.Gateway</PackageId>
     <Product>JT1078.Gateway</Product>
     <Description>基于Pipeline实现的JT1078Gateway库</Description>
     <PackageReleaseNotes>基于Pipeline实现的JT1078Gateway库</PackageReleaseNotes>
-    <RepositoryUrl>https://github.com/SmallChi/JT1078Gateway</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/SmallChi/JT1078Gateway</PackageProjectUrl>
-    <licenseUrl>https://github.com/SmallChi/JT1078Gateway/blob/master/LICENSE</licenseUrl>
-    <license>https://github.com/SmallChi/JT1078Gateway/blob/master/LICENSE</license>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <SignAssembly>false</SignAssembly>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Version>$(JT1078PackageVersion)</Version>
     <DocumentationFile>JT1078.Gateway.xml</DocumentationFile>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Codecs\**" />
@@ -39,16 +27,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="JT1078.Hls" Version="1.2.0-preview1" />
-    <PackageReference Include="JT1078.FMp4" Version="1.2.0-preview1" />
-    <PackageReference Include="JT1078.Flv" Version="1.2.0-preview1" />
+    <PackageReference Include="JT1078.Hls" Version="1.2.0-preview2" />
+    <PackageReference Include="JT1078.FMp4" Version="1.2.0-preview2" />
+    <PackageReference Include="JT1078.Flv" Version="1.2.0-preview2" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
     <PackageReference Include="System.IO.Pipelines" Version="6.0.1" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-  </ItemGroup>
+   <ItemGroup>
+	    <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+	    <None Include="..\..\README.md" Pack="true" PackagePath="" />
+   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\JT1078.Gateway.Abstractions\JT1078.Gateway.Abstractions.csproj" />

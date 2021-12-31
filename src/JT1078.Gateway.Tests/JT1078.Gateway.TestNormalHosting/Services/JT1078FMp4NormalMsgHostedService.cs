@@ -17,20 +17,19 @@ using System.IO;
 
 namespace JT1078.Gateway.TestNormalHosting.Services
 {
-    public class JT1078FMp4NormalMsgHostedService : BackgroundService
+    public class JT1078FMp4NormalMsgHostedService : IHostedService
     {
         private JT1078HttpSessionManager HttpSessionManager;
         private FMp4Encoder FM4Encoder;
         private ILogger Logger;
-        private IMemoryCache memoryCache;
         private const string ikey = "IFMp4KEY";
         private MessageDispatchDataService messageDispatchDataService;
-        private ConcurrentDictionary<string, List<H264NALU>> avFrameDict;
+        private ConcurrentDictionary<string, FMp4AVContext> avFrameDict;
         private H264Decoder H264Decoder;
-        List<JT1078Package> SegmentPackages = new List<JT1078Package>();// 一段包 以I帧为界 IPPPP ，  IPPPP 一组
+        List<NalUnitType> NaluFilter;
+        BlockingCollection<(string SIM, byte ChannelNo,byte[]FirstBuffer, byte[] OtherBuffer)> FMp4Blocking;
         public JT1078FMp4NormalMsgHostedService(
             MessageDispatchDataService messageDispatchDataService,
-            IMemoryCache memoryCache,
             ILoggerFactory loggerFactory,
             FMp4Encoder fM4Encoder,
             H264Decoder h264Decoder,
@@ -40,81 +39,149 @@ namespace JT1078.Gateway.TestNormalHosting.Services
             HttpSessionManager = httpSessionManager;
             FM4Encoder = fM4Encoder;
             H264Decoder= h264Decoder;
-            this.memoryCache = memoryCache;
             this.messageDispatchDataService = messageDispatchDataService;
-            //todo:定时清理
-            avFrameDict = new ConcurrentDictionary<string, List<H264NALU>>();
+            avFrameDict = new ConcurrentDictionary<string, FMp4AVContext>();
+            FMp4Blocking=new BlockingCollection<(string SIM, byte ChannelNo, byte[] FirstBuffer, byte[] OtherBuffer)>();
+            NaluFilter = new List<NalUnitType>();
+            NaluFilter.Add(NalUnitType.SEI);
+            NaluFilter.Add(NalUnitType.PPS);
+            NaluFilter.Add(NalUnitType.SPS);
+            NaluFilter.Add(NalUnitType.AUD);
         }
-        protected async override Task ExecuteAsync(CancellationToken stoppingToken)
-        {
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                var data = await messageDispatchDataService.FMp4Channel.Reader.ReadAsync();
-                try
-                {
-                    if (Logger.IsEnabled(LogLevel.Debug))
-                    {
-                        Logger.LogDebug(JsonSerializer.Serialize(HttpSessionManager.GetAll()));
-                        Logger.LogDebug($"{data.SIM},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
-                    }
 
-                    if (data.Label3.DataType == Protocol.Enums.JT1078DataType.视频I帧)
+        public Task StartAsync(CancellationToken cancellationToken)
+        {
+            Task.Run(async () => {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    var data = await messageDispatchDataService.FMp4Channel.Reader.ReadAsync();
+                    try
                     {
-                        if (SegmentPackages.Count>0)
+                        if (Logger.IsEnabled(LogLevel.Debug))
                         {
-                            //判断是否首帧
-                            //Logger.LogDebug($"时间1：{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss ffff")}");
-                            var httpSessions = HttpSessionManager.GetAllBySimAndChannelNo(data.SIM.TrimStart('0'), data.LogicChannelNumber);
-                            var firstHttpSessions = httpSessions.Where(w => !w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_FMp4 || w.RTPVideoType == Metadata.RTPVideoType.Ws_FMp4)).ToList();
-                            var otherHttpSessions = httpSessions.Where(w => w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_FMp4 || w.RTPVideoType == Metadata.RTPVideoType.Ws_FMp4)).ToList();
-                            if (firstHttpSessions.Count > 0)
+                            Logger.LogDebug(JsonSerializer.Serialize(HttpSessionManager.GetAll()));
+                            Logger.LogDebug($"{data.SIM},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
+                        }
+                        List<H264NALU> h264NALUs = H264Decoder.ParseNALU(data);
+                        if (h264NALUs!=null && h264NALUs.Count>0)
+                        {
+                            if(!avFrameDict.TryGetValue(data.GetKey(),out FMp4AVContext cacheFrame))
                             {
-                                //唯一
-                                var ftyp = FM4Encoder.FtypBox();
-                                var package1 = SegmentPackages[0];
-                                var nalus1 = H264Decoder.ParseNALU(package1);
-                                var moov = FM4Encoder.MoovBox(
-                                  nalus1.FirstOrDefault(f => f.NALUHeader.NalUnitType == NalUnitType.SPS),
-                                  nalus1.FirstOrDefault(f => f.NALUHeader.NalUnitType == NalUnitType.PPS));
-                                //首帧
-                                var styp = FM4Encoder.StypBox();
-                                var firstVideo = FM4Encoder.OtherVideoBox(SegmentPackages);
-                                foreach (var session in firstHttpSessions)
+                                cacheFrame=new FMp4AVContext();
+                                avFrameDict.TryAdd(data.GetKey(), cacheFrame);
+                            }
+                            foreach(var nalu in h264NALUs)
+                            {
+                                if (NaluFilter.Contains(nalu.NALUHeader.NalUnitType))
                                 {
-                                    HttpSessionManager.SendAVData(session, ftyp.Concat(moov).Concat(styp).Concat(firstVideo).ToArray(), true);
-                                    SegmentPackages.Clear();//发送完成后清理
+                                    if (nalu.NALUHeader.NalUnitType== NalUnitType.SPS)
+                                    {
+                                        cacheFrame.SPSNalu=nalu;
+                                    }
+                                    else if (nalu.NALUHeader.NalUnitType== NalUnitType.PPS)
+                                    {
+                                        cacheFrame.PPSNalu=nalu;
+                                    }
+                                }
+                                else
+                                {
+                                    cacheFrame.NALUs.Add(nalu);
                                 }
                             }
-                            if (otherHttpSessions.Count > 0)
+                            if (cacheFrame.NALUs.Count>1)
                             {
-                                //非首帧
-                                var styp = FM4Encoder.StypBox();
-                                var otherVideo = FM4Encoder.OtherVideoBox(SegmentPackages);
-                                foreach (var session in otherHttpSessions)
+                                if (cacheFrame.FirstCacheBuffer==null)
                                 {
-                                    HttpSessionManager.SendAVData(session, styp.Concat(otherVideo).ToArray(), false);
-                                    SegmentPackages.Clear();//发送完成后清理
+                                    cacheFrame.FirstCacheBuffer=FM4Encoder.FirstVideoBox(cacheFrame.SPSNalu, cacheFrame.PPSNalu);
                                 }
-
+                                List<H264NALU> tmp = new List<H264NALU>();
+                                int i = 0;
+                                foreach (var item in cacheFrame.NALUs)
+                                {
+                                    if (item.NALUHeader.KeyFrame)
+                                    {
+                                        if (tmp.Count>0)
+                                        {
+                                            FMp4Blocking.Add((data.SIM, data.LogicChannelNumber, cacheFrame.FirstCacheBuffer, FM4Encoder.OtherVideoBox(tmp)));
+                                            i+=tmp.Count;
+                                            tmp.Clear();
+                                        }
+                                        tmp.Add(item);
+                                        i+=tmp.Count;
+                                        FMp4Blocking.Add((data.SIM, data.LogicChannelNumber, cacheFrame.FirstCacheBuffer, FM4Encoder.OtherVideoBox(tmp)));
+                                        tmp.Clear();
+                                        cacheFrame.PrevPrimaryNalu = item;
+                                        continue;
+                                    }
+                                    if (cacheFrame.PrevPrimaryNalu!=null) //第一帧I帧
+                                    {
+                                        if (tmp.Count>1)
+                                        {
+                                            FMp4Blocking.Add((data.SIM, data.LogicChannelNumber, cacheFrame.FirstCacheBuffer, FM4Encoder.OtherVideoBox(tmp)));
+                                            i+=tmp.Count;
+                                            tmp.Clear();
+                                        }
+                                        tmp.Add(item);
+                                    }
+                                }
+                                cacheFrame.NALUs.RemoveRange(0, i);
                             }
                         }
-
-                        if (SegmentPackages.Count==0)
-                            SegmentPackages.Add(data);
                     }
-                    else {
-                        if (SegmentPackages.Count!=0) {
-                            SegmentPackages.Add(data);
-                        }                        
-                    }           
+                    catch (Exception ex)
+                    {
+                        Logger.LogError(ex, $"{data.SIM},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
+                    }
+
+                }
+            });
+            Task.Run(() => {
+                try
+                {
+                    foreach(var item in FMp4Blocking.GetConsumingEnumerable(cancellationToken))
+                    {
+                        var httpSessions = HttpSessionManager.GetAllBySimAndChannelNo(item.SIM.TrimStart('0'), item.ChannelNo);
+                        var firstHttpSessions = httpSessions.Where(w => !w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_FMp4 || w.RTPVideoType == Metadata.RTPVideoType.Ws_FMp4)).ToList();
+                        var otherHttpSessions = httpSessions.Where(w => w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_FMp4 || w.RTPVideoType == Metadata.RTPVideoType.Ws_FMp4)).ToList();
+                        if (firstHttpSessions.Count > 0)
+                        {
+                            //首帧
+                            foreach (var session in firstHttpSessions)
+                            {
+                                HttpSessionManager.SendAVData(session, item.FirstBuffer, true);
+                                HttpSessionManager.SendAVData(session, item.OtherBuffer, false);
+                            }
+                        }
+                        if (otherHttpSessions.Count > 0)
+                        {
+                            //非首帧
+                            foreach (var session in otherHttpSessions)
+                            {
+                                HttpSessionManager.SendAVData(session, item.OtherBuffer, false);
+                            }
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError(ex, $"{data.SIM},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
+
                 }
-  
-            }
-            await Task.CompletedTask;
+            });
+            return Task.CompletedTask;
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken)
+        {
+            return Task.CompletedTask;
+        }
+
+        public class FMp4AVContext
+        {
+            public byte[] FirstCacheBuffer { get; set; }
+            public H264NALU PrevPrimaryNalu { get; set; }
+            public H264NALU SPSNalu { get; set; }
+            public H264NALU PPSNalu { get; set; }
+            public List<H264NALU> NALUs { get; set; } = new List<H264NALU>();
         }
     }
 }

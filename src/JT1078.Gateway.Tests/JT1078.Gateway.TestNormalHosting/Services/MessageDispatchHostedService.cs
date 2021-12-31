@@ -33,16 +33,17 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                 var merge = JT1078.Protocol.JT1078Serializer.Merge(package);
                 if (merge != null)
                 {
-                    Parallel.Invoke(
-                        async() => {
-                            await messageDispatchDataService.FMp4Channel.Writer.WriteAsync(merge, stoppingToken);
-                        },
-                        async () => {
-                            await messageDispatchDataService.FlvChannel.Writer.WriteAsync(merge, stoppingToken);
-                        },
-                        async () => {
-                            await messageDispatchDataService.HlsChannel.Writer.WriteAsync(merge, stoppingToken);
-                        });
+                    await messageDispatchDataService.FMp4Channel.Writer.WriteAsync(merge, stoppingToken);
+                    //Parallel.Invoke(
+                    //    async() => {
+                    //        await messageDispatchDataService.FMp4Channel.Writer.WriteAsync(merge, stoppingToken);
+                    //    },
+                    //    async () => {
+                    //        await messageDispatchDataService.FlvChannel.Writer.WriteAsync(merge, stoppingToken);
+                    //    },
+                    //    async () => {
+                    //        await messageDispatchDataService.HlsChannel.Writer.WriteAsync(merge, stoppingToken);
+                    //    });
                 }
             });
             return Task.CompletedTask;

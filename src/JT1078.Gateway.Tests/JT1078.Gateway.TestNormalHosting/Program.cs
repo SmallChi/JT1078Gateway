@@ -29,7 +29,7 @@ namespace JT1078.Gateway.TestNormalHosting
                 })
                 .ConfigureLogging((context, logging) =>
                 {
-                    logging.SetMinimumLevel(LogLevel.Trace);
+                    //logging.SetMinimumLevel(LogLevel.Trace);
                     Console.WriteLine($"Environment.OSVersion.Platform:{Environment.OSVersion.Platform.ToString()}");
                     NLog.LogManager.LoadConfiguration($"Configs/nlog.{Environment.OSVersion.Platform.ToString()}.config");
                     logging.AddNLog(new NLogProviderOptions { CaptureMessageTemplates = true, CaptureMessageProperties = true });

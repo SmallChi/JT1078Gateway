@@ -20,7 +20,10 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6631FE91-3525-4A84-937B-781C73B343C9}"
 	ProjectSection(SolutionItems) = preProject
 		Info.props = Info.props
+		..\README.md = ..\README.md
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JT1078.FMp4", "..\..\JT1078\src\JT1078.FMp4\JT1078.FMp4.csproj", "{579E0BB3-98C3-4CC8-8771-DFB7F2B86CC4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -52,6 +55,10 @@ Global
 		{011934D6-BEE7-4CDA-9F67-4D6D7D672D6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{011934D6-BEE7-4CDA-9F67-4D6D7D672D6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{011934D6-BEE7-4CDA-9F67-4D6D7D672D6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{579E0BB3-98C3-4CC8-8771-DFB7F2B86CC4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{579E0BB3-98C3-4CC8-8771-DFB7F2B86CC4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{579E0BB3-98C3-4CC8-8771-DFB7F2B86CC4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{579E0BB3-98C3-4CC8-8771-DFB7F2B86CC4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

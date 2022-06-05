@@ -27,9 +27,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="JT1078.Hls" Version="1.2.0-preview2" />
-    <PackageReference Include="JT1078.FMp4" Version="1.2.0-preview2" />
-    <PackageReference Include="JT1078.Flv" Version="1.2.0-preview2" />
+    <PackageReference Include="JT1078.FMp4" Version="1.2.0-preview6" />
+    <PackageReference Include="JT1078.Hls" Version="1.2.0-preview6" />
+    <PackageReference Include="JT1078.Flv" Version="1.2.0-preview6" />
     <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
     <PackageReference Include="System.IO.Pipelines" Version="6.0.1" />
   </ItemGroup>
@@ -40,6 +40,7 @@
    </ItemGroup>
 
   <ItemGroup>
+    <!--<ProjectReference Include="..\..\..\JT1078\src\JT1078.FMp4\JT1078.FMp4.csproj" />-->
     <ProjectReference Include="..\JT1078.Gateway.Abstractions\JT1078.Gateway.Abstractions.csproj" />
   </ItemGroup>
 </Project>

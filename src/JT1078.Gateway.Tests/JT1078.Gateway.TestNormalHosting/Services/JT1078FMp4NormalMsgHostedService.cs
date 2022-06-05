@@ -26,8 +26,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
         private MessageDispatchDataService messageDispatchDataService;
         private ConcurrentDictionary<string, FMp4AVContext> avFrameDict;
         private H264Decoder H264Decoder;
-        List<NalUnitType> NaluFilter;
-        BlockingCollection<(string SIM, byte ChannelNo,byte[]FirstBuffer, byte[] OtherBuffer)> FMp4Blocking;
+        BlockingCollection<(string SIM, byte ChannelNo,byte[]FirstBuffer, byte[] AVFrameInfoBuffer, byte[] OtherBuffer)> FMp4Blocking;
         public JT1078FMp4NormalMsgHostedService(
             MessageDispatchDataService messageDispatchDataService,
             ILoggerFactory loggerFactory,
@@ -41,12 +40,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
             H264Decoder= h264Decoder;
             this.messageDispatchDataService = messageDispatchDataService;
             avFrameDict = new ConcurrentDictionary<string, FMp4AVContext>();
-            FMp4Blocking=new BlockingCollection<(string SIM, byte ChannelNo, byte[] FirstBuffer, byte[] OtherBuffer)>();
-            NaluFilter = new List<NalUnitType>();
-            NaluFilter.Add(NalUnitType.SEI);
-            NaluFilter.Add(NalUnitType.PPS);
-            NaluFilter.Add(NalUnitType.SPS);
-            NaluFilter.Add(NalUnitType.AUD);
+            FMp4Blocking=new BlockingCollection<(string SIM, byte ChannelNo, byte[] FirstBuffer, byte[] AVFrameInfoBuffer, byte[] OtherBuffer)>();
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
@@ -57,74 +51,32 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                     var data = await messageDispatchDataService.FMp4Channel.Reader.ReadAsync();
                     try
                     {
-                        if (Logger.IsEnabled(LogLevel.Debug))
+                        //if (Logger.IsEnabled(LogLevel.Debug))
+                        //{
+                        //    Logger.LogDebug(JsonSerializer.Serialize(HttpSessionManager.GetAll()));
+                        //    Logger.LogDebug($"{data.SIM},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
+                        //}
+                        bool keyframe = data.Label3.DataType == Protocol.Enums.JT1078DataType.视频I帧;
+                        JT1078AVFrame avframe = H264Decoder.ParseAVFrame(data);
+                        if (avframe.Nalus!= null && avframe.Nalus.Count>0)
                         {
-                            Logger.LogDebug(JsonSerializer.Serialize(HttpSessionManager.GetAll()));
-                            Logger.LogDebug($"{data.SIM},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
-                        }
-                        List<H264NALU> h264NALUs = H264Decoder.ParseNALU(data);
-                        if (h264NALUs!=null && h264NALUs.Count>0)
-                        {
-                            if(!avFrameDict.TryGetValue(data.GetKey(),out FMp4AVContext cacheFrame))
+                            if(!avFrameDict.TryGetValue(data.GetAVKey(),out FMp4AVContext cacheFrame))
                             {
                                 cacheFrame=new FMp4AVContext();
-                                avFrameDict.TryAdd(data.GetKey(), cacheFrame);
+                                avFrameDict.TryAdd(data.GetAVKey(), cacheFrame);
                             }
-                            foreach(var nalu in h264NALUs)
+                            if(keyframe)
                             {
-                                if (NaluFilter.Contains(nalu.NALUHeader.NalUnitType))
+                                if(avframe.SPS!=null && avframe.PPS != null)
                                 {
-                                    if (nalu.NALUHeader.NalUnitType== NalUnitType.SPS)
-                                    {
-                                        cacheFrame.SPSNalu=nalu;
-                                    }
-                                    else if (nalu.NALUHeader.NalUnitType== NalUnitType.PPS)
-                                    {
-                                        cacheFrame.PPSNalu=nalu;
-                                    }
-                                }
-                                else
-                                {
-                                    cacheFrame.NALUs.Add(nalu);
+                                    cacheFrame.AVFrameInfoBuffer = JsonSerializer.SerializeToUtf8Bytes(
+                                        new { Codecs = avframe .ToCodecs(), Width = avframe .Width, Height =avframe.Height});
+                                    cacheFrame.FirstCacheBuffer = FM4Encoder.FirstVideoBox(avframe);
                                 }
                             }
-                            if (cacheFrame.NALUs.Count>1)
+                            if (cacheFrame.FirstCacheBuffer != null)
                             {
-                                if (cacheFrame.FirstCacheBuffer==null)
-                                {
-                                    cacheFrame.FirstCacheBuffer=FM4Encoder.FirstVideoBox(cacheFrame.SPSNalu, cacheFrame.PPSNalu);
-                                }
-                                List<H264NALU> tmp = new List<H264NALU>();
-                                int i = 0;
-                                foreach (var item in cacheFrame.NALUs)
-                                {
-                                    if (item.NALUHeader.KeyFrame)
-                                    {
-                                        if (tmp.Count>0)
-                                        {
-                                            FMp4Blocking.Add((data.SIM, data.LogicChannelNumber, cacheFrame.FirstCacheBuffer, FM4Encoder.OtherVideoBox(tmp)));
-                                            i+=tmp.Count;
-                                            tmp.Clear();
-                                        }
-                                        tmp.Add(item);
-                                        i+=tmp.Count;
-                                        FMp4Blocking.Add((data.SIM, data.LogicChannelNumber, cacheFrame.FirstCacheBuffer, FM4Encoder.OtherVideoBox(tmp)));
-                                        tmp.Clear();
-                                        cacheFrame.PrevPrimaryNalu = item;
-                                        continue;
-                                    }
-                                    if (cacheFrame.PrevPrimaryNalu!=null) //第一帧I帧
-                                    {
-                                        if (tmp.Count>1)
-                                        {
-                                            FMp4Blocking.Add((data.SIM, data.LogicChannelNumber, cacheFrame.FirstCacheBuffer, FM4Encoder.OtherVideoBox(tmp)));
-                                            i+=tmp.Count;
-                                            tmp.Clear();
-                                        }
-                                        tmp.Add(item);
-                                    }
-                                }
-                                cacheFrame.NALUs.RemoveRange(0, i);
+                                FMp4Blocking.Add((data.SIM, data.LogicChannelNumber, cacheFrame.FirstCacheBuffer, cacheFrame.AVFrameInfoBuffer,FM4Encoder.OtherVideoBox(avframe.Nalus, data.GetAVKey(), keyframe)));
                             }
                         }
                     }
@@ -132,13 +84,18 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                     {
                         Logger.LogError(ex, $"{data.SIM},{data.SN},{data.LogicChannelNumber},{data.Label3.DataType.ToString()},{data.Label3.SubpackageType.ToString()},{data.Bodies.ToHexString()}");
                     }
-
                 }
             });
             Task.Run(() => {
+                //var filepath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "JT1078_7_4_4.mp4");
+                //if (File.Exists(filepath))
+                //{
+                //    File.Delete(filepath);
+                //}
+                //using var fileStream = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.Write);
                 try
                 {
-                    foreach(var item in FMp4Blocking.GetConsumingEnumerable(cancellationToken))
+                    foreach (var item in FMp4Blocking.GetConsumingEnumerable(cancellationToken))
                     {
                         var httpSessions = HttpSessionManager.GetAllBySimAndChannelNo(item.SIM.TrimStart('0'), item.ChannelNo);
                         var firstHttpSessions = httpSessions.Where(w => !w.FirstSend && (w.RTPVideoType == Metadata.RTPVideoType.Http_FMp4 || w.RTPVideoType == Metadata.RTPVideoType.Ws_FMp4)).ToList();
@@ -148,8 +105,11 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                             //首帧
                             foreach (var session in firstHttpSessions)
                             {
-                                HttpSessionManager.SendAVData(session, item.FirstBuffer, true);
+                                HttpSessionManager.SendAVData(session, item.AVFrameInfoBuffer, true);
+                                HttpSessionManager.SendAVData(session, item.FirstBuffer, false);
+                                //fileStream.Write(item.FirstBuffer);
                                 HttpSessionManager.SendAVData(session, item.OtherBuffer, false);
+                                //fileStream.Write(item.OtherBuffer);
                             }
                         }
                         if (otherHttpSessions.Count > 0)
@@ -158,6 +118,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                             foreach (var session in otherHttpSessions)
                             {
                                 HttpSessionManager.SendAVData(session, item.OtherBuffer, false);
+                                //fileStream.Write(item.OtherBuffer);
                             }
                         }
                     }
@@ -166,6 +127,7 @@ namespace JT1078.Gateway.TestNormalHosting.Services
                 {
 
                 }
+                //fileStream.Close();
             });
             return Task.CompletedTask;
         }
@@ -177,11 +139,8 @@ namespace JT1078.Gateway.TestNormalHosting.Services
 
         public class FMp4AVContext
         {
+            public byte[] AVFrameInfoBuffer { get; set; }
             public byte[] FirstCacheBuffer { get; set; }
-            public H264NALU PrevPrimaryNalu { get; set; }
-            public H264NALU SPSNalu { get; set; }
-            public H264NALU PPSNalu { get; set; }
-            public List<H264NALU> NALUs { get; set; } = new List<H264NALU>();
         }
     }
 }
